@@ -169,7 +169,10 @@ if ($user) {
 <body>
 <div class="app-shell">
     <?php if ($user): ?>
-        <aside class="app-sidebar">
+        <aside class="app-sidebar" id="appSidebar" aria-hidden="true">
+            <button type="button" class="btn btn-outline-light btn-sm sidebar-close-btn d-lg-none" data-sidebar-close>
+                <i class="bi bi-x-lg me-1"></i> <?= Helpers::sanitize('Menüyü Kapat') ?>
+            </button>
             <div class="sidebar-brand">
                 <a href="<?= $isAdminArea ? '/admin/dashboard.php' : '/dashboard.php' ?>"><?= Helpers::sanitize($siteName) ?></a>
                 <?php if ($siteTagline): ?>
@@ -213,13 +216,19 @@ if ($user) {
                 <a href="/logout.php" class="btn btn-outline-light w-100"><?= Helpers::sanitize('Çıkış Yap') ?></a>
             </div>
         </aside>
+        <div class="app-sidebar-backdrop" data-sidebar-close></div>
     <?php endif; ?>
     <div class="app-main d-flex flex-column flex-grow-1">
         <?php if ($user): ?>
             <header class="app-topbar d-flex align-items-center justify-content-between gap-3">
-                <div>
-                    <h1 class="h4 mb-1"><?= Helpers::sanitize($pageHeadline) ?></h1>
-                    <p class="text-muted mb-0"><?= date('d F Y') ?></p>
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-outline-primary sidebar-mobile-toggle d-lg-none" type="button" data-sidebar-toggle aria-controls="appSidebar" aria-expanded="false" aria-label="<?= Helpers::sanitize('Menüyü Aç') ?>">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div>
+                        <h1 class="h4 mb-1"><?= Helpers::sanitize($pageHeadline) ?></h1>
+                        <p class="text-muted mb-0"><?= date('d F Y') ?></p>
+                    </div>
                 </div>
                 <?php if ($isAdminRole && !$isAdminArea): ?>
                     <div class="d-flex align-items-center gap-2">
