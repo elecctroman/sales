@@ -271,6 +271,127 @@ CREATE TABLE IF NOT EXISTS notification_reads (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS pages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    summary TEXT DEFAULT NULL,
+    content LONGTEXT DEFAULT NULL,
+    status ENUM('draft','scheduled','published','archived') NOT NULL DEFAULT 'draft',
+    visibility ENUM('public','private') NOT NULL DEFAULT 'public',
+    hero_image VARCHAR(255) DEFAULT NULL,
+    template VARCHAR(100) NOT NULL DEFAULT 'default',
+    meta_title VARCHAR(255) DEFAULT NULL,
+    meta_description TEXT DEFAULT NULL,
+    meta_keywords TEXT DEFAULT NULL,
+    parent_id INT DEFAULT NULL,
+    published_at DATETIME DEFAULT NULL,
+    created_by INT DEFAULT NULL,
+    updated_by INT DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT NULL,
+    deleted_at DATETIME DEFAULT NULL,
+    FOREIGN KEY (parent_id) REFERENCES pages(id) ON DELETE SET NULL,
+    INDEX idx_pages_status (status),
+    INDEX idx_pages_visibility (visibility),
+    INDEX idx_pages_published_at (published_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS page_revisions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    page_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    summary TEXT DEFAULT NULL,
+    content LONGTEXT DEFAULT NULL,
+    meta_title VARCHAR(255) DEFAULT NULL,
+    meta_description TEXT DEFAULT NULL,
+    meta_keywords TEXT DEFAULT NULL,
+    template VARCHAR(100) DEFAULT NULL,
+    hero_image VARCHAR(255) DEFAULT NULL,
+    created_by INT DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    slug VARCHAR(160) NOT NULL UNIQUE,
+    description TEXT DEFAULT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_by INT DEFAULT NULL,
+    updated_by INT DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT NULL,
+    deleted_at DATETIME DEFAULT NULL,
+    INDEX idx_blog_categories_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    category_id INT DEFAULT NULL,
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    summary TEXT DEFAULT NULL,
+    content LONGTEXT DEFAULT NULL,
+    cover_image VARCHAR(255) DEFAULT NULL,
+    status ENUM('draft','scheduled','published','archived') NOT NULL DEFAULT 'draft',
+    meta_title VARCHAR(255) DEFAULT NULL,
+    meta_description TEXT DEFAULT NULL,
+    meta_keywords TEXT DEFAULT NULL,
+    published_at DATETIME DEFAULT NULL,
+    reading_time INT DEFAULT NULL,
+    canonical_url VARCHAR(255) DEFAULT NULL,
+    created_by INT DEFAULT NULL,
+    updated_by INT DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT NULL,
+    deleted_at DATETIME DEFAULT NULL,
+    FOREIGN KEY (category_id) REFERENCES blog_categories(id) ON DELETE SET NULL,
+    INDEX idx_blog_posts_status (status),
+    INDEX idx_blog_posts_published_at (published_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_tags (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    slug VARCHAR(160) NOT NULL UNIQUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_post_tags (
+    post_id INT NOT NULL,
+    tag_id INT NOT NULL,
+    PRIMARY KEY (post_id, tag_id),
+    FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES blog_tags(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT NOT NULL,
+    user_id INT DEFAULT NULL,
+    author_name VARCHAR(150) DEFAULT NULL,
+    author_email VARCHAR(190) DEFAULT NULL,
+    content TEXT NOT NULL,
+    status ENUM('pending','approved','rejected','spam') NOT NULL DEFAULT 'pending',
+    created_by INT DEFAULT NULL,
+    updated_by INT DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT NULL,
+    FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_blog_comments_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Migration instructions for existing installations:
+--   1. Execute the CREATE TABLE statements for `pages`, `page_revisions`, `blog_categories`, `blog_posts`,
+--      `blog_tags`, `blog_post_tags`, and `blog_comments` if they do not already exist in your database.
+--   2. Update your web server rewrite rules so legacy routes (login.php, register.php, account.php, catalog.php,
+--      blog.php, page.php, contact.php, support.php) point to the new SEO-friendly paths such as /giris/,
+--      /kayit/, /hesabim/, /urunler/, /blog/ and /sayfa/{slug}/.
+
 INSERT INTO users (id, name, email, password_hash, role, balance, status, created_at)
 VALUES (
     1,

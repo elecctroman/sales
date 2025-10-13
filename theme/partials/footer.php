@@ -1,4 +1,5 @@
-﻿<footer class="site-footer">
+<?php use App\Helpers; ?>
+<footer class="site-footer">
     <div class="site-footer__grid">
         <div>
             <h4>OyunHesap.com</h4>
@@ -13,7 +14,7 @@
         <div>
             <h5>Customer Service</h5>
             <ul>
-                <li><a href="/support.php">Support Center</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::supportUrl(), ENT_QUOTES, 'UTF-8') ?>">Support Center</a></li>
                 <li><a href="#">Order Tracking</a></li>
                 <li><a href="#">Refund Policy</a></li>
                 <li><a href="#">Privacy Policy</a></li>
@@ -22,19 +23,19 @@
         <div>
             <h5>Popular Products</h5>
             <ul>
-                <li><a href="/catalog.php#valorant">Valorant Points</a></li>
-                <li><a href="/catalog.php#pubg">PUBG UC</a></li>
-                <li><a href="/catalog.php#windows">Windows Keys</a></li>
-                <li><a href="/catalog.php#design">Design Tools</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::catalogUrl(), ENT_QUOTES, 'UTF-8') ?>#valorant">Valorant Points</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::catalogUrl(), ENT_QUOTES, 'UTF-8') ?>#pubg">PUBG UC</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::catalogUrl(), ENT_QUOTES, 'UTF-8') ?>#windows">Windows Keys</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::catalogUrl(), ENT_QUOTES, 'UTF-8') ?>#design">Design Tools</a></li>
             </ul>
         </div>
         <div>
             <h5>Company</h5>
             <ul>
-                <li><a href="/blog.php">Blog</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::blogUrl(), ENT_QUOTES, 'UTF-8') ?>">Blog</a></li>
                 <li><a href="#">About</a></li>
                 <li><a href="#">Careers</a></li>
-                <li><a href="/contact.php">Contact</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::contactUrl(), ENT_QUOTES, 'UTF-8') ?>">Contact</a></li>
             </ul>
         </div>
     </div>

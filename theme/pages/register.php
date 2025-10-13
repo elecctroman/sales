@@ -5,8 +5,8 @@ $authState = $auth ?? array('errors' => array(), 'success' => '', 'old' => array
 $nameValue = isset($authState['old']['name']) ? $authState['old']['name'] : '';
 $emailValue = isset($authState['old']['email']) ? $authState['old']['email'] : '';
 ?>
-<form class="auth-card" method="post" action="/register.php">
-    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(Helpers::csrfToken()) ?>">
+<form class="auth-card" method="post" action="<?= htmlspecialchars(Helpers::registerUrl(), ENT_QUOTES, 'UTF-8') ?>">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(Helpers::csrfToken(), ENT_QUOTES, 'UTF-8') ?>">
     <h1>Yeni Hesap Oluştur</h1>
 
     <?php if (!empty($authState['errors'])): ?>
@@ -32,5 +32,5 @@ $emailValue = isset($authState['old']['email']) ? $authState['old']['email'] : '
         <input type="password" name="password_confirmation" required>
     </label>
     <button class="btn btn-primary" type="submit">Kayıt Ol</button>
-    <p class="auth-card__hint">Zaten hesabınız var mı? <a href="/login.php">Giriş yapın</a>.</p>
+    <p class="auth-card__hint">Zaten hesabınız var mı? <a href="<?= htmlspecialchars(Helpers::loginUrl(), ENT_QUOTES, 'UTF-8') ?>">Giriş yapın</a>.</p>
 </form>

@@ -37,7 +37,7 @@ if (!$product) : ?>
             <span class="material-icons" aria-hidden="true">inventory_2</span>
             <h1>Urun bulunamadi</h1>
             <p>Aradiginiz urunu bulamadik. Kataloga geri donerek diger secenekleri inceleyebilirsiniz.</p>
-            <a class="btn btn-primary" href="/catalog.php">Kataloga don</a>
+            <a class="btn btn-primary" href="<?= htmlspecialchars(Helpers::catalogUrl(), ENT_QUOTES, 'UTF-8') ?>">Kataloga don</a>
         </div>
     </section>
     <?php return; ?>
@@ -218,7 +218,7 @@ $journeySteps = array(
             </form>
         <?php else: ?>
             <div class="alert alert-info">
-                Yorum yapabilmek icin lutfen <a href="/login.php">giris yapin</a> veya <a href="/register.php">hesap olusturun</a>.
+                Yorum yapabilmek icin lutfen <a href="<?= htmlspecialchars(Helpers::loginUrl(), ENT_QUOTES, 'UTF-8') ?>">giris yapin</a> veya <a href="<?= htmlspecialchars(Helpers::registerUrl(), ENT_QUOTES, 'UTF-8') ?>">hesap olusturun</a>.
             </div>
         <?php endif; ?>
     </div>

@@ -11,6 +11,13 @@ class Notification
     private const READ_TABLE = 'notification_reads';
 
     /**
+     * Cached stats to avoid duplicate calculations within a single request.
+     *
+     * @var array<string,int>
+     */
+    private static $statsCache = array();
+
+    /**
      * Ensure the notification tables exist.
      *
      * @return void
@@ -168,7 +175,115 @@ class Notification
             'expire_at' => $payload['expire_at'] ?? null,
         ));
 
+        self::$statsCache = array();
+
         return (int)$pdo->lastInsertId();
+    }
+
+    /**
+     * Retrieve aggregate notification statistics for dashboards.
+     *
+     * @return array<string,int>
+     */
+    public static function stats(): array
+    {
+        if (self::$statsCache) {
+            return self::$statsCache;
+        }
+
+        self::ensureTables();
+
+        $pdo = Database::connection();
+        $now = date('Y-m-d H:i:s');
+
+        $stats = array(
+            'total' => 0,
+            'published' => 0,
+            'draft' => 0,
+            'archived' => 0,
+            'scheduled' => 0,
+            'expired' => 0,
+            'targeted' => 0,
+            'active' => 0,
+        );
+
+        $statusStmt = $pdo->query('SELECT status, COUNT(*) AS total FROM ' . self::TABLE . ' GROUP BY status');
+        $rows = $statusStmt->fetchAll(PDO::FETCH_ASSOC) ?: array();
+        foreach ($rows as $row) {
+            $status = isset($row['status']) ? (string)$row['status'] : '';
+            $count = isset($row['total']) ? (int)$row['total'] : 0;
+            if ($status === 'published' || $status === 'draft' || $status === 'archived') {
+                $stats[$status] = $count;
+                $stats['total'] += $count;
+            } else {
+                $stats['total'] += $count;
+            }
+        }
+
+        $scheduledStmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM ' . self::TABLE . ' WHERE status = "published" AND publish_at IS NOT NULL AND publish_at > :now'
+        );
+        $scheduledStmt->execute(array('now' => $now));
+        $stats['scheduled'] = (int)$scheduledStmt->fetchColumn();
+
+        $expiredStmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM ' . self::TABLE . ' WHERE status = "published" AND expire_at IS NOT NULL AND expire_at < :now'
+        );
+        $expiredStmt->execute(array('now' => $now));
+        $stats['expired'] = (int)$expiredStmt->fetchColumn();
+
+        $activeStmt = $pdo->prepare(
+            'SELECT COUNT(*) FROM ' . self::TABLE . ' WHERE status = "published"'
+            . ' AND (publish_at IS NULL OR publish_at <= :now)'
+            . ' AND (expire_at IS NULL OR expire_at >= :now)'
+        );
+        $activeStmt->execute(array('now' => $now));
+        $stats['active'] = (int)$activeStmt->fetchColumn();
+
+        $targetedStmt = $pdo->query('SELECT COUNT(*) FROM ' . self::TABLE . " WHERE scope = 'user'");
+        $stats['targeted'] = (int)$targetedStmt->fetchColumn();
+
+        self::$statsCache = $stats;
+
+        return $stats;
+    }
+
+    /**
+     * Get read counts for a list of notifications.
+     *
+     * @param array<int,int> $notificationIds
+     * @return array<int,int>
+     */
+    public static function readCounts(array $notificationIds): array
+    {
+        $ids = array();
+        foreach ($notificationIds as $id) {
+            $id = (int)$id;
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+
+        if (!$ids) {
+            return array();
+        }
+
+        self::ensureTables();
+
+        $pdo = Database::connection();
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $pdo->prepare(
+            'SELECT notification_id, COUNT(*) AS total FROM ' . self::READ_TABLE . ' WHERE notification_id IN ('
+            . $placeholders . ') GROUP BY notification_id'
+        );
+        $stmt->execute($ids);
+
+        $counts = array();
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $counts[(int)$row['notification_id']] = (int)$row['total'];
+        }
+
+        return $counts;
     }
 
     /**
@@ -188,6 +303,8 @@ class Notification
         $pdo = Database::connection();
         $stmt = $pdo->prepare('UPDATE ' . self::TABLE . ' SET status = :status, updated_at = NOW() WHERE id = :id LIMIT 1');
         $stmt->execute(array('status' => $status, 'id' => $id));
+
+        self::$statsCache = array();
     }
 
     /**
@@ -201,6 +318,8 @@ class Notification
         $pdo = Database::connection();
         $stmt = $pdo->prepare('DELETE FROM ' . self::TABLE . ' WHERE id = :id LIMIT 1');
         $stmt->execute(array('id' => $id));
+
+        self::$statsCache = array();
     }
 
     /**

@@ -74,7 +74,7 @@ $ticketPriorityLabels = array(
             ?>
             <a class="account-tabs__item<?= $isActive ? ' is-active' : '' ?>"
                data-account-tab="<?= htmlspecialchars($tabKey, ENT_QUOTES, 'UTF-8') ?>"
-               href="/account.php?tab=<?= htmlspecialchars($tabKey, ENT_QUOTES, 'UTF-8') ?>"
+               href="<?= htmlspecialchars(Helpers::urlWithQuery(Helpers::accountUrl(), array('tab' => $tabKey)), ENT_QUOTES, 'UTF-8') ?>"
                role="tab"
                aria-selected="<?= $isActive ? 'true' : 'false' ?>">
                 <?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>

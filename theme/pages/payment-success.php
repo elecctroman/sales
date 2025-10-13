@@ -202,7 +202,7 @@ $methodLabel = isset($methodLabels[$method]) ? $methodLabels[$method] : 'Odeme';
     <?php endif; ?>
 
     <footer class="payment-success__footer">
-        <a class="btn btn-secondary" href="/catalog.php">Alisverise Devam Et</a>
-        <a class="btn btn-ghost" href="/account.php">Siparislerimi Goruntule</a>
+        <a class="btn btn-secondary" href="<?= htmlspecialchars(Helpers::catalogUrl(), ENT_QUOTES, 'UTF-8') ?>">Alisverise Devam Et</a>
+        <a class="btn btn-ghost" href="<?= htmlspecialchars(Helpers::accountUrl(), ENT_QUOTES, 'UTF-8') ?>">Siparislerimi Goruntule</a>
     </footer>
 </section>

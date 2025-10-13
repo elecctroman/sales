@@ -81,6 +81,12 @@ if ($user) {
                                 'roles' => array('super_admin', 'admin'),
                             ),
                             array(
+                                'label' => 'Bildirim Ayarlari',
+                                'href' => '/admin/settings-notifications.php',
+                                'pattern' => '/admin/settings-notifications.php',
+                                'roles' => array('super_admin', 'admin'),
+                            ),
+                            array(
                                 'label' => 'Mail Ayarlari',
                                 'href' => '/admin/settings-mail.php',
                                 'pattern' => '/admin/settings-mail.php',

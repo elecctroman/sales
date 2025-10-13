@@ -5,6 +5,16 @@ $canonicalUrl = isset($GLOBALS['pageCanonicalUrl']) && $GLOBALS['pageCanonicalUr
     ? $GLOBALS['pageCanonicalUrl']
     : Helpers::canonicalUrl();
 
+$metaDescription = isset($GLOBALS['pageMetaDescription']) && is_string($GLOBALS['pageMetaDescription']) && $GLOBALS['pageMetaDescription'] !== ''
+    ? (string)$GLOBALS['pageMetaDescription']
+    : Helpers::seoDescription();
+
+$metaKeywords = isset($GLOBALS['pageMetaKeywords']) && is_string($GLOBALS['pageMetaKeywords']) && $GLOBALS['pageMetaKeywords'] !== ''
+    ? (string)$GLOBALS['pageMetaKeywords']
+    : Helpers::seoKeywords();
+
+$siteName = Helpers::siteName();
+
 $themeCssPath = '/theme/assets/css/main.css';
 $cssVersion = @filemtime(__DIR__ . '/../assets/css/main.css');
 if ($cssVersion) {
@@ -35,7 +45,11 @@ $notificationJson = json_encode($notificationPayload, JSON_UNESCAPED_UNICODE | J
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') . ' | ' : '' ?>Storefront</title>
+    <title><?= isset($pageTitle) && $pageTitle !== ''
+        ? htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') . ' | ' . htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8')
+        : htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8') ?></title>
+    <meta name="description" content="<?= htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8') ?>">
+    <meta name="keywords" content="<?= htmlspecialchars($metaKeywords, ENT_QUOTES, 'UTF-8') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://code.iconify.design" crossorigin>
