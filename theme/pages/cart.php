@@ -83,7 +83,7 @@ $paymentMethods = array(
             <?php else: ?>
                 <div class="cart-empty">
                     <p>Sepetinizde urun bulunmuyor.</p>
-                    <a class="cart-empty__link" href="/catalog.php">Alisverise Devam Et</a>
+                    <a class="cart-empty__link" href="<?= htmlspecialchars(Helpers::catalogUrl(), ENT_QUOTES, 'UTF-8') ?>">Alisverise Devam Et</a>
                 </div>
             <?php endif; ?>
         </div>
@@ -114,7 +114,7 @@ $paymentMethods = array(
             </div>
 
             <div class="cart-summary__footer">
-                <a href="/catalog.php" class="cart-summary__link">Alisverise Devam Et</a>
+                <a href="<?= htmlspecialchars(Helpers::catalogUrl(), ENT_QUOTES, 'UTF-8') ?>" class="cart-summary__link">Alisverise Devam Et</a>
             </div>
         </aside>
     </div>

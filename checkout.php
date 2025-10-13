@@ -160,9 +160,17 @@ try {
 
         AuditLog::record($userId, 'orders.checkout.balance', 'product_order', $orderIds ? $orderIds[0] : null, 'Sepet bakiyeyle odendi (' . $orderReference . ')');
 
+        $paymentSuccessBase = Helpers::routeUrl('payment.success') ?: '/odeme/basarili/';
+        $balanceRedirect = Helpers::urlWithQuery($paymentSuccessBase, array(
+            'method' => 'balance',
+            'orders' => implode(',', $orderIds),
+            'reference' => $orderReference,
+            'balance' => number_format($remainingBalance, 2, '.', ''),
+        ));
+
         echo json_encode(array(
             'success' => true,
-            'redirect' => '/payment-success.php?method=balance&orders=' . implode(',', $orderIds) . '&reference=' . urlencode($orderReference) . '&balance=' . urlencode(number_format($remainingBalance, 2, '.', '')),
+            'redirect' => $balanceRedirect,
             'remaining_balance' => $remainingBalance,
         ));
         return;
@@ -207,9 +215,16 @@ try {
 
     AuditLog::record($userId, 'orders.checkout.' . $paymentMethod, 'product_order', $orderIds ? $orderIds[0] : null, 'Sepet odeme yontemi: ' . $paymentMethod . ' (' . $orderReference . ')');
 
+    $paymentSuccessBase = Helpers::routeUrl('payment.success') ?: '/odeme/basarili/';
+    $redirectUrl = Helpers::urlWithQuery($paymentSuccessBase, array(
+        'method' => $paymentMethod,
+        'orders' => implode(',', $orderIds),
+        'reference' => $orderReference,
+    ));
+
     echo json_encode(array(
         'success' => true,
-        'redirect' => '/payment-success.php?method=' . urlencode($paymentMethod) . '&orders=' . implode(',', $orderIds) . '&reference=' . urlencode($orderReference),
+        'redirect' => $redirectUrl,
     ));
 } catch (\Throwable $exception) {
     if ($pdo->inTransaction()) {

@@ -33,10 +33,30 @@ class Helpers
      * @param string $path
      * @return void
      */
-    public static function redirect($path)
+    public static function redirect($path, int $status = 302)
     {
-        header('Location: ' . $path);
+        $target = (string)$path;
+        if ($target === '') {
+            $target = '/';
+        }
+
+        if (strpos($target, 'http://') !== 0 && strpos($target, 'https://') !== 0) {
+            $target = self::absoluteUrl($target);
+        }
+
+        header('Location: ' . $target, true, $status);
         exit;
+    }
+
+    /**
+     * Perform a permanent redirect helper.
+     *
+     * @param string $path
+     * @return void
+     */
+    public static function permanentRedirect($path)
+    {
+        self::redirect($path, 301);
     }
 
     /**
@@ -536,6 +556,173 @@ class Helpers
     }
 
     /**
+     * Build a URL from a named route.
+     *
+     * @param string $routeName
+     * @param array<string, mixed> $parameters
+     * @param bool $absolute
+     * @return string|null
+     */
+    public static function routeUrl(string $routeName, array $parameters = array(), bool $absolute = false): ?string
+    {
+        try {
+            $path = Router::instance()->url($routeName, $parameters);
+        } catch (\Throwable $exception) {
+            $path = null;
+        }
+
+        if (!$path) {
+            return null;
+        }
+
+        return $absolute ? self::absoluteUrl($path) : $path;
+    }
+
+    public static function catalogUrl(bool $absolute = false): string
+    {
+        return self::routeUrl('catalog.index', array(), $absolute) ?: '#';
+    }
+
+    public static function categoryUrl(string $slug, bool $absolute = false): string
+    {
+        $slug = trim($slug);
+        if ($slug === '') {
+            return '#';
+        }
+
+        return self::routeUrl('catalog.category', array('category_slug' => $slug), $absolute) ?: '#';
+    }
+
+    public static function cartUrl(bool $absolute = false): string
+    {
+        return self::routeUrl('cart.view', array(), $absolute) ?: '#';
+    }
+
+    public static function checkoutUrl(bool $absolute = false): string
+    {
+        return self::routeUrl('checkout.index', array(), $absolute) ?: '#';
+    }
+
+    public static function accountUrl(bool $absolute = false): string
+    {
+        return self::routeUrl('account.dashboard', array(), $absolute) ?: '#';
+    }
+
+    public static function loginUrl(bool $absolute = false, ?string $returnTo = null): string
+    {
+        $url = self::routeUrl('login', array(), $absolute) ?: '#';
+        if ($returnTo !== null) {
+            $normalized = self::normalizeRedirectPath($returnTo, '/');
+            if ($normalized !== '' && $normalized !== '#') {
+                $url = self::urlWithQuery($url, array('return' => $normalized));
+            }
+        }
+
+        return $url;
+    }
+
+    public static function registerUrl(bool $absolute = false): string
+    {
+        return self::routeUrl('register', array(), $absolute) ?: '#';
+    }
+
+    public static function supportUrl(bool $absolute = false): string
+    {
+        return self::routeUrl('support.index', array(), $absolute) ?: '#';
+    }
+
+    public static function contactUrl(bool $absolute = false): string
+    {
+        return self::routeUrl('contact', array(), $absolute) ?: '#';
+    }
+
+    public static function blogUrl(bool $absolute = false): string
+    {
+        return self::routeUrl('blog.index', array(), $absolute) ?: '#';
+    }
+
+    public static function blogCategoryUrl(string $slug, bool $absolute = false): string
+    {
+        $slug = trim($slug);
+        if ($slug === '') {
+            return '#';
+        }
+
+        return self::routeUrl('blog.category', array('category_slug' => $slug), $absolute) ?: '#';
+    }
+
+    public static function blogTagUrl(string $slug, bool $absolute = false): string
+    {
+        $slug = trim($slug);
+        if ($slug === '') {
+            return '#';
+        }
+
+        return self::routeUrl('blog.tag', array('tag_slug' => $slug), $absolute) ?: '#';
+    }
+
+    public static function blogPostUrl(array $post, bool $absolute = false): string
+    {
+        $slug = isset($post['slug']) ? trim((string)$post['slug']) : '';
+        if ($slug === '') {
+            return '#';
+        }
+
+        $publishedAt = isset($post['published_at']) ? (string)$post['published_at'] : null;
+        $timestamp = $publishedAt ? strtotime($publishedAt) : false;
+        if ($timestamp === false) {
+            $timestamp = time();
+        }
+
+        $year = (int)date('Y', $timestamp);
+        $month = (int)date('m', $timestamp);
+
+        return self::routeUrl('blog.post', array('year' => $year, 'month' => str_pad((string)$month, 2, '0', STR_PAD_LEFT), 'slug' => $slug), $absolute) ?: '#';
+    }
+
+    public static function pageUrl(string $slug, bool $absolute = false): string
+    {
+        $slug = trim($slug);
+        if ($slug === '') {
+            return '#';
+        }
+
+        return self::routeUrl('page.show', array('slug' => $slug), $absolute) ?: '#';
+    }
+
+    /**
+     * Append query parameters to a URL string.
+     *
+     * @param string $url
+     * @param array<string, mixed> $parameters
+     * @return string
+     */
+    public static function urlWithQuery(string $url, array $parameters): string
+    {
+        $url = trim($url);
+        if ($url === '' || $url === '#' || !$parameters) {
+            return $url;
+        }
+
+        $query = array();
+        foreach ($parameters as $key => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            $query[$key] = $value;
+        }
+
+        if (!$query) {
+            return $url;
+        }
+
+        $separator = strpos($url, '?') === false ? '?' : '&';
+
+        return $url . $separator . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+    }
+
+    /**
      * Generate a canonical URL for the current request.
      *
      * @param array $overrides
@@ -712,8 +899,6 @@ class Helpers
             return '#';
         }
 
-        $path = '/product/' . rawurlencode($slug) . '/';
-
-        return $absolute ? self::absoluteUrl($path) : $path;
+        return self::routeUrl('product.show', array('slug' => $slug), $absolute) ?: '#';
     }
 }

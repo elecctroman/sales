@@ -8,16 +8,132 @@ use App\Database;
 use App\Helpers;
 use App\Homepage;
 use App\Settings;
+use App\Router;
+use App\Page;
+use App\Blog;
 $script = basename($_SERVER['SCRIPT_NAME']);
 $authContext = array(
     'errors' => array(),
     'success' => '',
     'old' => array(),
+    'redirect' => null,
 );
 
-if ($script === 'product.php' && isset($_GET['slug']) && $_GET['slug'] !== '' && strpos($_SERVER['REQUEST_URI'], 'product.php') !== false) {
-    $targetSlug = trim((string)$_GET['slug']);
-    Helpers::redirect(Helpers::productUrl($targetSlug));
+$router = Router::instance();
+$requestedUri = isset($_SERVER['REQUEST_URI']) ? (string)$_SERVER['REQUEST_URI'] : '/';
+$requestedPath = parse_url($requestedUri, PHP_URL_PATH);
+if ($requestedPath === null || $requestedPath === false || $requestedPath === '') {
+    $requestedPath = '/';
+}
+
+$requestMethod = isset($_SERVER['REQUEST_METHOD']) ? strtoupper((string)$_SERVER['REQUEST_METHOD']) : 'GET';
+$routeMatch = $router->match($requestedPath, $requestMethod);
+$currentRoute = null;
+$currentRouteName = null;
+
+if ($routeMatch) {
+    $currentRoute = $routeMatch;
+    $currentRouteName = $routeMatch['name'];
+
+    if ($script === 'index.php') {
+        $script = $routeMatch['script'];
+    }
+
+    if (!empty($routeMatch['params']) && is_array($routeMatch['params'])) {
+        foreach ($routeMatch['params'] as $key => $value) {
+            if (!isset($_GET[$key])) {
+                $_GET[$key] = $value;
+            }
+        }
+    }
+
+    if ($requestMethod === 'GET') {
+        $redirectTarget = $routeMatch['path'];
+        if ($redirectTarget !== $requestedPath) {
+            $queryParams = $_GET;
+            if (is_array($routeMatch['params'])) {
+                foreach ($routeMatch['params'] as $paramKey => $paramValue) {
+                    if (isset($queryParams[$paramKey]) && (string)$queryParams[$paramKey] === (string)$paramValue) {
+                        unset($queryParams[$paramKey]);
+                    }
+                }
+            }
+            if ($queryParams) {
+                $redirectTarget .= '?' . http_build_query($queryParams);
+            }
+            Helpers::permanentRedirect($redirectTarget);
+        }
+    }
+} elseif ($requestMethod === 'GET') {
+    $canonical = $router->canonicalFromScript($script, $_GET);
+    if ($canonical && isset($canonical['path']) && $canonical['path'] !== $requestedPath) {
+        $queryParams = $_GET;
+        if (is_array($canonical['params'])) {
+            foreach ($canonical['params'] as $paramKey => $paramValue) {
+                if (isset($queryParams[$paramKey]) && (string)$queryParams[$paramKey] === (string)$paramValue) {
+                    unset($queryParams[$paramKey]);
+                }
+            }
+        }
+        $target = $canonical['path'];
+        if ($queryParams) {
+            $target .= '?' . http_build_query($queryParams);
+        }
+        Helpers::permanentRedirect($target);
+    }
+}
+
+if ($script === 'blog.php' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = isset($_POST['action']) ? trim((string)$_POST['action']) : '';
+    if ($action === 'add_comment') {
+        $feedback = array(
+            'errors' => array(),
+            'success' => '',
+        );
+
+        $csrf = isset($_POST['csrf_token']) ? (string)$_POST['csrf_token'] : '';
+        if (!Helpers::verifyCsrf($csrf)) {
+            $feedback['errors'][] = 'Lütfen sayfayı yenileyip tekrar deneyin.';
+        }
+
+        $slug = isset($_POST['post_slug']) ? trim((string)$_POST['post_slug']) : '';
+        $postRecord = null;
+        if ($slug !== '') {
+            $postRecord = Blog::findPublished($slug);
+        }
+        if (!$postRecord) {
+            $feedback['errors'][] = 'Yorum yapmak istediğiniz blog yazısı bulunamadı.';
+        }
+
+        $authorName = isset($_POST['author_name']) ? trim((string)$_POST['author_name']) : '';
+        $authorEmail = isset($_POST['author_email']) ? trim((string)$_POST['author_email']) : '';
+        $content = isset($_POST['content']) ? trim((string)$_POST['content']) : '';
+
+        if ($content === '') {
+            $feedback['errors'][] = 'Yorum içeriği boş olamaz.';
+        }
+
+        if ($authorEmail !== '' && !filter_var($authorEmail, FILTER_VALIDATE_EMAIL)) {
+            $feedback['errors'][] = 'Geçerli bir e-posta adresi giriniz.';
+        }
+
+        if (!$feedback['errors'] && $postRecord) {
+            $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+            Blog::addComment((int)$postRecord['id'], array(
+                'author_name' => $authorName !== '' ? $authorName : null,
+                'author_email' => $authorEmail !== '' ? $authorEmail : null,
+                'content' => $content,
+                'status' => 'pending',
+            ), $userId);
+            $feedback['success'] = 'Yorumunuz onaylandıktan sonra yayınlanacaktır.';
+        }
+
+        Helpers::setFlash('blog_comment_feedback', $feedback);
+
+        $redirectPost = $postRecord ?: array('slug' => $slug, 'published_at' => date('Y-m-d H:i:s'));
+        $redirectUrl = Helpers::blogPostUrl($redirectPost, true);
+        Helpers::redirect($redirectUrl);
+    }
 }
 
 if ($script === 'cart.php' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -84,15 +200,23 @@ if ($script === 'cart.php' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if ($script === 'login.php' && $_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_GET['register'])) {
-    Helpers::redirect('/register.php');
+    Helpers::redirect(Helpers::registerUrl());
+}
+
+if ($script === 'login.php' && isset($_GET['return'])) {
+    $authContext['redirect'] = Helpers::normalizeRedirectPath((string)$_GET['return'], '/');
 }
 
 if ($script === 'login.php' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $identifier = isset($_POST['email']) ? trim((string)$_POST['email']) : '';
     $password = isset($_POST['password']) ? (string)$_POST['password'] : '';
     $tokenValue = isset($_POST['csrf_token']) ? (string)$_POST['csrf_token'] : '';
+    $returnTarget = isset($_POST['return']) ? Helpers::normalizeRedirectPath((string)$_POST['return'], '/') : null;
 
     $authContext['old']['email'] = $identifier;
+    if ($returnTarget) {
+        $authContext['redirect'] = $returnTarget;
+    }
 
     if (!Helpers::verifyCsrf($tokenValue)) {
         $authContext['errors'][] = 'Oturum doğrulaması başarısız. Lütfen tekrar deneyin.';
@@ -103,7 +227,8 @@ if ($script === 'login.php' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = Auth::attempt($identifier, $password);
             if ($user) {
                 $_SESSION['user'] = $user;
-                Helpers::redirect('/');
+                $redirectTo = $returnTarget ?: '/';
+                Helpers::redirect($redirectTo);
             } else {
                 $authContext['errors'][] = 'Giriş bilgileri doğrulanamadı.';
             }
@@ -443,6 +568,33 @@ $paymentSuccessContext = array(
     'remaining_balance' => null,
 );
 
+$pageContext = array(
+    'page' => null,
+    'breadcrumbs' => array(),
+);
+
+$blogContext = array(
+    'view' => 'list',
+    'posts' => array(),
+    'post' => null,
+    'filters' => array(),
+    'pagination' => array(
+        'page' => 1,
+        'per_page' => 9,
+        'total' => 0,
+        'pages' => 0,
+    ),
+    'categories' => array(),
+    'tags' => array(),
+    'recent' => array(),
+    'search' => '',
+    'related' => array(),
+    'feedback' => array(
+        'errors' => array(),
+        'success' => '',
+    ),
+);
+
 $defaultCategoryImage = '/theme/assets/images/site/KYQdPJDHaWihG3n7Sf3sHseGTRMT3xtmVGlDvNOj.webp';
 $defaultAccent = '#6366f1';
 
@@ -460,7 +612,7 @@ $defaultCategoryStyles = array(
 
 $featuredProducts = array();
 $homeSections = array();
-$blogPosts = $defaultBlogPosts;
+$homepageBlogPosts = $defaultBlogPosts;
 $catalogProducts = array();
 $popularCategories = array();
 $navCategories = array();
@@ -493,11 +645,59 @@ try {
         }
     }
 
+    $blogContext['feedback'] = Helpers::getFlash('blog_comment_feedback', $blogContext['feedback']);
+    $blogContext['categories'] = Blog::categories(true);
+    $blogContext['tags'] = Blog::tags(20);
+
+    $recentPosts = Blog::recentPosts(5);
+    if ($recentPosts) {
+        $mappedRecent = array();
+        foreach ($recentPosts as $post) {
+            $publishedAt = isset($post['published_at']) && $post['published_at'] ? (string)$post['published_at'] : (isset($post['created_at']) ? (string)$post['created_at'] : date('Y-m-d H:i:s'));
+            $timestamp = strtotime($publishedAt) ?: time();
+            $summarySource = isset($post['summary']) && $post['summary'] !== '' ? (string)$post['summary'] : strip_tags((string)($post['content'] ?? ''));
+            $post['published_human'] = date('d M Y', $timestamp);
+            $post['excerpt'] = Helpers::truncate($summarySource, 180);
+            $post['url'] = Helpers::blogPostUrl($post);
+            if (!isset($post['cover_image']) || $post['cover_image'] === '') {
+                $post['cover_image'] = '/theme/assets/images/blog/HApvChgiIiapIJu5zDkXgSrMsU6C9aZvQpjm3jXt.jpg';
+            }
+            $mappedRecent[] = $post;
+        }
+
+        $blogContext['recent'] = $mappedRecent;
+
+        $homepageBlogPosts = array();
+        foreach (array_slice($mappedRecent, 0, 3) as $post) {
+            $excerptSource = isset($post['summary']) && $post['summary'] !== '' ? (string)$post['summary'] : (string)$post['excerpt'];
+            $homepageBlogPosts[] = array(
+                'title' => (string)$post['title'],
+                'excerpt' => Helpers::truncate($excerptSource, 140),
+                'date' => $post['published_human'],
+                'image' => (string)$post['cover_image'],
+                'url' => (string)$post['url'],
+                'category' => isset($post['category_name']) ? (string)$post['category_name'] : null,
+            );
+        }
+    }
+
     $blogSetting = decodeSettingArray('homepage_blog_posts');
     if ($blogSetting) {
-        $normalisedPosts = normaliseBlogEntries($blogSetting);
-        if ($normalisedPosts) {
-            $blogPosts = $normalisedPosts;
+        $customPosts = array();
+        foreach ($blogSetting as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $customPosts[] = array(
+                'title' => isset($entry['title']) ? (string)$entry['title'] : '',
+                'excerpt' => isset($entry['excerpt']) ? (string)$entry['excerpt'] : '',
+                'date' => isset($entry['date']) ? (string)$entry['date'] : '',
+                'image' => isset($entry['image']) ? (string)$entry['image'] : '',
+                'url' => isset($entry['url']) ? (string)$entry['url'] : '#',
+            );
+        }
+        if ($customPosts) {
+            $homepageBlogPosts = $customPosts;
         }
     }
 
@@ -527,6 +727,178 @@ try {
         });
     }
     unset($childList);
+
+    if ($script === 'page.php') {
+        $pageSlug = isset($_GET['slug']) ? trim((string)$_GET['slug']) : '';
+        if ($pageSlug === '' && $routeMatch && isset($routeMatch['params']['slug'])) {
+            $pageSlug = (string)$routeMatch['params']['slug'];
+        }
+
+        if ($pageSlug !== '') {
+            $pageRecord = Page::findPublishedBySlug($pageSlug);
+            if ($pageRecord) {
+                $pageContext['page'] = $pageRecord;
+                $pageContext['breadcrumbs'] = array(
+                    array('label' => 'Ana Sayfa', 'url' => Helpers::absoluteUrl('/')),
+                    array('label' => $pageRecord['title'], 'url' => null),
+                );
+
+                if (!empty($pageRecord['meta_description'])) {
+                    $GLOBALS['pageMetaDescription'] = (string)$pageRecord['meta_description'];
+                }
+                if (!empty($pageRecord['meta_keywords'])) {
+                    $GLOBALS['pageMetaKeywords'] = (string)$pageRecord['meta_keywords'];
+                }
+
+                Helpers::setCanonicalUrl(Helpers::pageUrl($pageRecord['slug'], true));
+                $pageTitleValue = !empty($pageRecord['meta_title']) ? (string)$pageRecord['meta_title'] : (string)$pageRecord['title'];
+                Helpers::setPageTitle($pageTitleValue);
+                $pageContext['page_title'] = $pageTitleValue;
+            } else {
+                http_response_code(404);
+            }
+        } else {
+            http_response_code(404);
+        }
+    }
+
+    if ($script === 'blog.php') {
+        $filters = array();
+        $pageNumber = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        if (isset($_GET['sayfa'])) {
+            $pageNumber = (int)$_GET['sayfa'];
+        }
+        if ($pageNumber < 1) {
+            $pageNumber = 1;
+        }
+
+        $perPage = 9;
+
+        if (!empty($_GET['category_slug'])) {
+            $categorySlug = Helpers::slugify((string)$_GET['category_slug']);
+            if ($categorySlug !== '') {
+                $filters['category'] = $categorySlug;
+            }
+        } elseif (!empty($_GET['category'])) {
+            $categorySlug = Helpers::slugify((string)$_GET['category']);
+            if ($categorySlug !== '') {
+                $filters['category'] = $categorySlug;
+            }
+        }
+
+        if (!empty($_GET['tag_slug'])) {
+            $tagSlug = Helpers::slugify((string)$_GET['tag_slug']);
+            if ($tagSlug !== '') {
+                $filters['tag'] = $tagSlug;
+            }
+        } elseif (!empty($_GET['tag'])) {
+            $tagSlug = Helpers::slugify((string)$_GET['tag']);
+            if ($tagSlug !== '') {
+                $filters['tag'] = $tagSlug;
+            }
+        }
+
+        if (!empty($_GET['search'])) {
+            $filters['query'] = trim((string)$_GET['search']);
+        } elseif (!empty($_GET['q'])) {
+            $filters['query'] = trim((string)$_GET['q']);
+        }
+
+        if (isset($filters['query'])) {
+            $blogContext['search'] = $filters['query'];
+        }
+
+        if (!empty($filters)) {
+            $blogContext['filters'] = $filters;
+        }
+
+        if ($currentRouteName === 'blog.post') {
+            $slug = isset($_GET['slug']) ? (string)$_GET['slug'] : '';
+            if ($slug === '' && $routeMatch && isset($routeMatch['params']['slug'])) {
+                $slug = (string)$routeMatch['params']['slug'];
+            }
+
+            $activePost = Blog::findPublished($slug);
+            if ($activePost) {
+                $blogContext['view'] = 'detail';
+                $blogContext['post'] = $activePost;
+
+                $related = array();
+                foreach ($blogContext['recent'] as $recentPost) {
+                    if ((int)$recentPost['id'] === (int)$activePost['id']) {
+                        continue;
+                    }
+                    $related[] = $recentPost;
+                }
+                $blogContext['related'] = array_slice($related, 0, 3);
+
+                $canonicalUrl = Helpers::blogPostUrl($activePost, true);
+                Helpers::setCanonicalUrl($canonicalUrl);
+                $postTitle = !empty($activePost['meta_title']) ? (string)$activePost['meta_title'] : (string)$activePost['title'];
+                Helpers::setPageTitle($postTitle);
+                $blogContext['page_title'] = $postTitle;
+
+                $postMeta = isset($activePost['meta_description']) && $activePost['meta_description'] !== ''
+                    ? (string)$activePost['meta_description']
+                    : Helpers::truncate(strip_tags((string)($activePost['summary'] ?? $activePost['content'] ?? '')), 160);
+                $GLOBALS['pageMetaDescription'] = $postMeta;
+                if (!empty($activePost['meta_keywords'])) {
+                    $GLOBALS['pageMetaKeywords'] = (string)$activePost['meta_keywords'];
+                }
+            } else {
+                http_response_code(404);
+            }
+        } else {
+            $blogContext['view'] = 'list';
+            $blogContext['pagination']['page'] = $pageNumber;
+            $blogContext['pagination']['per_page'] = $perPage;
+
+            $offset = ($pageNumber - 1) * $perPage;
+            $pagination = Blog::paginatePosts($filters, $perPage, $offset);
+
+            $posts = array();
+            foreach ($pagination['items'] as $post) {
+                $publishedAt = isset($post['published_at']) && $post['published_at'] ? (string)$post['published_at'] : (isset($post['created_at']) ? (string)$post['created_at'] : date('Y-m-d H:i:s'));
+                $timestamp = strtotime($publishedAt) ?: time();
+                $summarySource = isset($post['summary']) && $post['summary'] !== '' ? (string)$post['summary'] : strip_tags((string)($post['content'] ?? ''));
+                $post['published_human'] = date('d M Y', $timestamp);
+                $post['excerpt'] = Helpers::truncate($summarySource, 200);
+                $post['url'] = Helpers::blogPostUrl($post);
+                if (!isset($post['cover_image']) || $post['cover_image'] === '') {
+                    $post['cover_image'] = '/theme/assets/images/blog/HApvChgiIiapIJu5zDkXgSrMsU6C9aZvQpjm3jXt.jpg';
+                }
+                $posts[] = $post;
+            }
+
+            $blogContext['posts'] = $posts;
+            $blogContext['pagination']['total'] = (int)$pagination['total'];
+            $blogContext['pagination']['pages'] = $blogContext['pagination']['per_page'] > 0
+                ? (int)ceil($pagination['total'] / $blogContext['pagination']['per_page'])
+                : 1;
+
+            $query = $_GET;
+            unset($query['page'], $query['sayfa']);
+            if (!empty($filters['query'])) {
+                $query['search'] = $filters['query'];
+            }
+            $baseUrl = Helpers::blogUrl();
+            if ($filters) {
+                if (isset($filters['category'])) {
+                    $baseUrl = Helpers::blogCategoryUrl($filters['category']);
+                } elseif (isset($filters['tag'])) {
+                    $baseUrl = Helpers::blogTagUrl($filters['tag']);
+                }
+            }
+            $canonicalUrl = rtrim($baseUrl, '/');
+            if ($pageNumber > 1) {
+                $query['page'] = $pageNumber;
+            }
+            if ($query) {
+                $canonicalUrl .= '?' . http_build_query($query);
+            }
+            Helpers::setCanonicalUrl(Helpers::absoluteUrl($canonicalUrl));
+        }
+    }
 
     if ($script === 'product.php') {
         $requestedProductSlug = isset($_GET['slug']) ? trim((string)$_GET['slug']) : '';
@@ -660,8 +1032,8 @@ try {
             }
 
             $breadcrumbs = array(
-                array('label' => 'Home', 'url' => '/'),
-                array('label' => 'Catalog', 'url' => '/catalog.php'),
+                array('label' => 'Home', 'url' => Helpers::absoluteUrl('/')),
+                array('label' => 'Catalog', 'url' => Helpers::catalogUrl()),
             );
 
             $categoryTrail = array();
@@ -669,9 +1041,13 @@ try {
             $guard = 0;
             while ($trailCursor && isset($categoriesById[$trailCursor]) && $guard < 10) {
                 $categoryNode = $categoriesById[$trailCursor];
+                $categorySlug = isset($categoryNode['slug']) ? (string)$categoryNode['slug'] : '';
+                if ($categorySlug === '') {
+                    $categorySlug = Helpers::slugify($categoryNode['name']);
+                }
                 array_unshift($categoryTrail, array(
                     'label' => $categoryNode['name'],
-                    'url' => '/catalog.php?category=' . (int)$categoryNode['id'],
+                    'url' => Helpers::categoryUrl($categorySlug),
                 ));
                 $trailCursor = isset($categoryNode['parent_id']) ? (int)$categoryNode['parent_id'] : 0;
                 $guard++;
@@ -708,8 +1084,9 @@ try {
 
     if ($script === 'payment-success.php') {
         if (!$isLoggedIn) {
-            $returnTo = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/payment-success.php';
-            Helpers::redirect('/login.php?return=' . urlencode($returnTo));
+            $fallbackPaymentPath = Helpers::routeUrl('payment.success') ?: '/';
+            $returnTo = isset($_SERVER['REQUEST_URI']) ? (string)$_SERVER['REQUEST_URI'] : $fallbackPaymentPath;
+            Helpers::redirect(Helpers::loginUrl(false, $returnTo));
         }
 
         $allowedMethods = array('card', 'balance', 'eft', 'crypto');
@@ -735,19 +1112,18 @@ try {
 
         $orderIds = array_values(array_unique($orderIds));
 
-        $canonicalQuery = array(
-            'method=' . urlencode($methodParam),
-        );
+        $canonicalBase = Helpers::routeUrl('payment.success') ?: '/odeme/basarili/';
+        $canonicalQuery = array('method' => $methodParam);
         if ($orderIds) {
-            $canonicalQuery[] = 'orders=' . urlencode(implode(',', $orderIds));
+            $canonicalQuery['orders'] = implode(',', $orderIds);
         }
         if ($reference !== '') {
-            $canonicalQuery[] = 'reference=' . urlencode($reference);
+            $canonicalQuery['reference'] = $reference;
         }
         if ($methodParam === 'balance' && isset($_GET['balance'])) {
-            $canonicalQuery[] = 'balance=' . urlencode((string)$_GET['balance']);
+            $canonicalQuery['balance'] = (string)$_GET['balance'];
         }
-        $canonicalUrl = '/payment-success.php' . ($canonicalQuery ? '?' . implode('&', $canonicalQuery) : '');
+        $canonicalUrl = Helpers::urlWithQuery($canonicalBase, $canonicalQuery);
         Helpers::setCanonicalUrl(Helpers::absoluteUrl($canonicalUrl));
 
         if ($methodParam === 'balance' && isset($_GET['balance'])) {
@@ -1189,8 +1565,8 @@ if (!$homeSections) {
     $homeSections = $defaultHomeSections;
 }
 
-if (!$blogPosts) {
-    $blogPosts = $defaultBlogPosts;
+if (!$homepageBlogPosts) {
+    $homepageBlogPosts = $defaultBlogPosts;
 }
 
 if (!$catalogProducts) {
@@ -1239,7 +1615,9 @@ $accountData = array(
 
 if ($script === 'account.php') {
     if (!$isLoggedIn) {
-        Helpers::redirect('/login.php');
+        $fallbackAccountPath = Helpers::accountUrl() ?: '/';
+        $returnTo = isset($_SERVER['REQUEST_URI']) ? (string)$_SERVER['REQUEST_URI'] : $fallbackAccountPath;
+        Helpers::redirect(Helpers::loginUrl(false, $returnTo));
     }
 
     $requestedTab = isset($_GET['tab']) ? strtolower(trim((string)$_GET['tab'])) : 'profile';
@@ -1512,8 +1890,6 @@ if ($script === 'account.php') {
     }
 }
 
-$script = basename($_SERVER['SCRIPT_NAME']);
-
 switch ($script) {
     case 'product.php':
         if (!$productPageContext['product']) {
@@ -1550,11 +1926,46 @@ switch ($script) {
         exit;
 
     case 'blog.php':
+        $blogTitle = 'Blog';
+        if ($blogContext['view'] === 'detail' && isset($blogContext['post']['title'])) {
+            $blogTitle = (string)$blogContext['post']['title'];
+        } elseif ($blogContext['view'] === 'list' && isset($blogContext['filters']['category'])) {
+            $blogTitle = 'Kategori: ' . ucfirst(str_replace('-', ' ', $blogContext['filters']['category']));
+        } elseif ($blogContext['view'] === 'list' && isset($blogContext['filters']['tag'])) {
+            $blogTitle = 'Etiket: ' . ucfirst(str_replace('-', ' ', $blogContext['filters']['tag']));
+        }
+
+        $resolvedBlogTitle = isset($blogContext['page_title']) && $blogContext['page_title'] !== ''
+            ? (string)$blogContext['page_title']
+            : $blogTitle;
+        Helpers::setPageTitle($resolvedBlogTitle);
+
         theme_render('blog', array(
-            'pageTitle' => 'Blog',
-            'posts' => $blogPosts,
+            'pageTitle' => $resolvedBlogTitle,
             'isLoggedIn' => $isLoggedIn,
+            'blog' => $blogContext,
         ));
+        exit;
+
+    case 'page.php':
+        if (!$pageContext['page']) {
+            Helpers::setPageTitle('Sayfa bulunamadı');
+            http_response_code(404);
+            theme_render('404', array(
+                'pageTitle' => 'Sayfa bulunamadı',
+                'isLoggedIn' => $isLoggedIn,
+            ));
+        } else {
+            $pageResolvedTitle = isset($pageContext['page_title']) && $pageContext['page_title'] !== ''
+                ? (string)$pageContext['page_title']
+                : (string)$pageContext['page']['title'];
+            Helpers::setPageTitle($pageResolvedTitle);
+            theme_render('page', array(
+                'pageTitle' => $pageResolvedTitle,
+                'isLoggedIn' => $isLoggedIn,
+                'pageContext' => $pageContext,
+            ));
+        }
         exit;
 
     case 'login.php':
@@ -1620,7 +2031,7 @@ theme_render('index', array(
     'featuredProducts' => $featuredProducts,
     'popularCategories' => $popularCategories,
     'sections' => $homeSections,
-    'blogPosts' => $blogPosts,
+    'blogPosts' => $homepageBlogPosts,
     'isLoggedIn' => $isLoggedIn,
 ));
 

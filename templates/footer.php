@@ -14,7 +14,7 @@ $pageInlineScripts = isset($GLOBALS['pageInlineScripts']) && is_array($GLOBALS['
         <div class="d-flex gap-3">
             <a class="text-decoration-none" href="/terms.php">Kullanım Şartları</a>
             <a class="text-decoration-none" href="/privacy.php">Gizlilik</a>
-            <a class="text-decoration-none" href="/contact.php">İletişim</a>
+            <a class="text-decoration-none" href="<?= htmlspecialchars(Helpers::contactUrl(), ENT_QUOTES, 'UTF-8') ?>">İletişim</a>
         </div>
     </div>
 </footer>

@@ -1,4 +1,5 @@
 <?php
+use App\Helpers;
 $navCategories = isset($GLOBALS['theme_nav_categories']) ? $GLOBALS['theme_nav_categories'] : array();
 $cartSummary = isset($GLOBALS['theme_cart_summary']) ? $GLOBALS['theme_cart_summary'] : array();
 $cartTotals = isset($cartSummary['totals']) ? $cartSummary['totals'] : array();
@@ -54,15 +55,15 @@ foreach ($notifications as $notificationItem) {
 ?>
 <header class="site-header">
     <div class="site-header__main">
-        <a class="site-header__brand" href="/">OyunHesap<span>.com.tr</span></a>
-        <form class="site-header__search" action="/catalog.php">
+        <a class="site-header__brand" href="<?= htmlspecialchars(Helpers::absoluteUrl('/'), ENT_QUOTES, 'UTF-8') ?>">OyunHesap<span>.com.tr</span></a>
+        <form class="site-header__search" action="<?= htmlspecialchars(Helpers::catalogUrl(), ENT_QUOTES, 'UTF-8') ?>">
             <input type="search" name="q" placeholder="PUBG">
             <button type="submit" aria-label="Ara">
                 <span class="material-icons">search</span>
             </button>
         </form>
         <div class="site-header__actions">
-            <a href="/cart.php" class="site-header__icon-btn site-header__icon-btn--badge" data-cart-button aria-label="Sepeti ac">
+            <a href="<?= htmlspecialchars(Helpers::cartUrl(), ENT_QUOTES, 'UTF-8') ?>" class="site-header__icon-btn site-header__icon-btn--badge" data-cart-button aria-label="Sepeti ac">
                 <span class="material-icons">shopping_cart</span>
                 <span class="site-header__badge<?= $cartCount > 0 ? '' : ' is-hidden' ?>" data-cart-count><?= (int)$cartCount ?></span>
             </a>
@@ -106,16 +107,16 @@ foreach ($notifications as $notificationItem) {
                 </a>
             </div>
             <?php if (!$isLoggedInHeader): ?>
-                <a href="/login.php" class="site-header__pill site-header__pill--primary">
+                <a href="<?= htmlspecialchars(Helpers::loginUrl(), ENT_QUOTES, 'UTF-8') ?>" class="site-header__pill site-header__pill--primary">
                     <span class="material-icons">login</span>
                     <span>Giri&#351; Yap</span>
                 </a>
-                <a href="/register.php" class="site-header__pill site-header__pill--success">
+                <a href="<?= htmlspecialchars(Helpers::registerUrl(), ENT_QUOTES, 'UTF-8') ?>" class="site-header__pill site-header__pill--success">
                     <span class="material-icons">person_add</span>
                     <span>Kay&#305;t Ol</span>
                 </a>
             <?php else: ?>
-                <a href="/account.php" class="site-header__user" data-account-link>
+                <a href="<?= htmlspecialchars(Helpers::accountUrl(), ENT_QUOTES, 'UTF-8') ?>" class="site-header__user" data-account-link>
                     <span class="site-header__user-avatar" aria-hidden="true"><?= htmlspecialchars($userInitials !== '' ? $userInitials : 'U', ENT_QUOTES, 'UTF-8') ?></span>
                     <span class="site-header__user-details">
                         <span class="site-header__user-name">
@@ -124,7 +125,7 @@ foreach ($notifications as $notificationItem) {
                         <span class="site-header__user-balance">Bakiye: <?= htmlspecialchars($userFormattedBalance, ENT_QUOTES, 'UTF-8') ?> TL</span>
                     </span>
                 </a>
-                <a href="/logout.php" class="site-header__pill site-header__pill--primary site-header__pill--icon-only" aria-label="Cikis Yap">
+                <a href="<?= htmlspecialchars(Helpers::routeUrl('logout'), ENT_QUOTES, 'UTF-8') ?>" class="site-header__pill site-header__pill--primary site-header__pill--icon-only" aria-label="Cikis Yap">
                     <span class="material-icons">logout</span>
                 </a>
             <?php endif; ?>
@@ -146,7 +147,7 @@ foreach ($notifications as $notificationItem) {
                     }
                 ?>
                 <li class="site-header__nav-item<?= $hasChildren ? ' has-children' : '' ?>">
-                    <a href="/catalog.php#<?= htmlspecialchars($slug) ?>" class="site-header__nav-link">
+                    <a href="<?= htmlspecialchars(Helpers::categoryUrl($slug), ENT_QUOTES, 'UTF-8') ?>" class="site-header__nav-link">
                         <span class="site-header__nav-avatar">
                             <?php if ($iconClass !== ''): ?>
                                 <?php if ($iconifyName !== ''): ?>
@@ -173,7 +174,7 @@ foreach ($notifications as $notificationItem) {
                     <?php if ($hasChildren): ?>
                         <div class="site-header__nav-dropdown">
                             <?php foreach ($category['children'] as $child): ?>
-                                <a href="/catalog.php#<?= htmlspecialchars($child['slug']) ?>" class="site-header__nav-dropdown-link">
+                                <a href="<?= htmlspecialchars(Helpers::categoryUrl($child['slug']), ENT_QUOTES, 'UTF-8') ?>" class="site-header__nav-dropdown-link">
                                     <?= htmlspecialchars($child['name']) ?>
                                 </a>
                             <?php endforeach; ?>

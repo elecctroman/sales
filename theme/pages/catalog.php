@@ -61,7 +61,7 @@
                                 Sepete Ekle
                             </button>
                         <?php else: ?>
-                            <a class="product-card__button product-card__button--ghost" href="/login.php">Giris Yap</a>
+                            <a class="product-card__button product-card__button--ghost" href="<?= htmlspecialchars(\App\Helpers::loginUrl(), ENT_QUOTES, 'UTF-8') ?>">Giris Yap</a>
                         <?php endif; ?>
                     </div>
                 </div>

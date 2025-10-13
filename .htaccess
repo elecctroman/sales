@@ -1,14 +1,16 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Serve existing files and directories as-is
+    # Allow existing files and directories to be served directly
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # SEO friendly product URLs: /product/slug/
-    RewriteRule ^product/([^/]+)/?$ product.php?slug=$1 [L,QSA]
+    # Route all other requests through the front controller
+    RewriteRule ^ index.php [L]
+</IfModule>
 
-    # Fallback to index.php for other requests if needed
-    RewriteRule ^index\.php$ - [L]
+# Fallback for environments without mod_rewrite
+<IfModule !mod_rewrite.c>
+    DirectoryIndex index.php
 </IfModule>

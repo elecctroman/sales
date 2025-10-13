@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Settings;
+use App\Helpers;
 
 class Homepage
 {
@@ -13,6 +14,7 @@ class Homepage
      */
     public static function defaultSliderConfig(): array
     {
+        $catalogUrl = Helpers::catalogUrl();
         return array(
             'mainSlides' => array(
                 array(
@@ -20,7 +22,7 @@ class Homepage
                     'title' => 'Lancelot Kılıç Ustası',
                     'subtitle' => 'Elmas satın al ve sezonu domine et.',
                     'cta_text' => 'Hemen Satın Al',
-                    'cta_url' => '/catalog.php#mobile-legends',
+                    'cta_url' => $catalogUrl . '#mobile-legends',
                     'image' => '/theme/assets/images/banners/UBQs76PGwFIW2p4C5BjDIqKIRpNDhFvXaxmskag4.webp',
                     'media_image' => '/theme/assets/images/site/FoOS2ikJSxstFsWSfNWZEdnTQl0ziBY0dmn4QnX3.webp',
                     'footer_logo' => '',
@@ -30,7 +32,7 @@ class Homepage
                     'title' => 'En sevdiğin skinleri kap',
                     'subtitle' => 'Haftalık VP paketlerinde %30’a varan indirim.',
                     'cta_text' => 'İndirimi Gör',
-                    'cta_url' => '/catalog.php#valorant',
+                    'cta_url' => $catalogUrl . '#valorant',
                     'image' => '/theme/assets/images/banners/ZxEuccRk6DKtKgYohlCo6KcVxl9KnZYg2lkvxXX4.webp',
                     'media_image' => '/theme/assets/images/site/KYQdPJDHaWihG3n7Sf3sHseGTRMT3xtmVGlDvNOj.webp',
                     'footer_logo' => '',
@@ -40,7 +42,7 @@ class Homepage
                     'title' => 'Premium üretkenlik paketi',
                     'subtitle' => 'Adobe Creative Cloud + Office 365 tek pakette.',
                     'cta_text' => 'Paketi İncele',
-                    'cta_url' => '/catalog.php#design-tools',
+                    'cta_url' => $catalogUrl . '#design-tools',
                     'image' => '/theme/assets/images/banners/wfH6NIajXtDYa9gGwozg7tx6Jut7W0DefDCaPHar.webp',
                     'media_image' => '/theme/assets/images/site/obCqriZHgv5AeK7LzXnQE3DNCm3Vw2wndCflf2mF.webp',
                     'footer_logo' => '',
@@ -51,7 +53,7 @@ class Homepage
                     'title' => 'Mobile Legends',
                     'subtitle' => 'Elmaslarını anında yükle.',
                     'cta_text' => 'Elmas Satın Al',
-                    'cta_url' => '/catalog.php#mobile-legends',
+                    'cta_url' => $catalogUrl . '#mobile-legends',
                     'image' => '/theme/assets/images/banners/ZxEuccRk6DKtKgYohlCo6KcVxl9KnZYg2lkvxXX4.webp',
                     'footer_logo' => '',
                 ),
@@ -59,7 +61,7 @@ class Homepage
                     'title' => 'Wartune Ultra',
                     'subtitle' => 'Yeni sezon görevleri seni bekliyor.',
                     'cta_text' => 'Elmas Satın Al',
-                    'cta_url' => '/catalog.php#wartune',
+                    'cta_url' => $catalogUrl . '#wartune',
                     'image' => '/theme/assets/images/banners/UBQs76PGwFIW2p4C5BjDIqKIRpNDhFvXaxmskag4.webp',
                     'footer_logo' => '',
                 ),
@@ -78,35 +80,35 @@ class Homepage
                     'title' => 'PUBG Mobile',
                     'subtitle' => 'UC paketleri',
                     'image' => '/theme/assets/images/site/843JlXv47N4zBwrqTjLgP9B0kXgNSl3O14oHtESl.webp',
-                    'link' => '/catalog.php#pubg',
+                    'link' => $catalogUrl . '#pubg',
                     'footer_logo' => '',
                 ),
                 array(
                     'title' => 'Mobile Legends',
                     'subtitle' => 'Elmas & kupon',
                     'image' => '/theme/assets/images/site/KYQdPJDHaWihG3n7Sf3sHseGTRMT3xtmVGlDvNOj.webp',
-                    'link' => '/catalog.php#mobile-legends',
+                    'link' => $catalogUrl . '#mobile-legends',
                     'footer_logo' => '',
                 ),
                 array(
                     'title' => 'Valorant',
                     'subtitle' => 'VP & kodlar',
                     'image' => '/theme/assets/images/site/FoOS2ikJSxstFsWSfNWZEdnTQl0ziBY0dmn4QnX3.webp',
-                    'link' => '/catalog.php#valorant',
+                    'link' => $catalogUrl . '#valorant',
                     'footer_logo' => '',
                 ),
                 array(
                     'title' => 'Wartune',
                     'subtitle' => 'Ultra paket',
                     'image' => '/theme/assets/images/site/obCqriZHgv5AeK7LzXnQE3DNCm3Vw2wndCflf2mF.webp',
-                    'link' => '/catalog.php#wartune',
+                    'link' => $catalogUrl . '#wartune',
                     'footer_logo' => '/theme/assets/images/site/logo-light.svg',
                 ),
                 array(
                     'title' => 'Age of Empires',
                     'subtitle' => 'Mobile gold',
                     'image' => '/theme/assets/images/site/KreWJFMqBI43i90m6TEODfrRY6BJoEjftSp84I5B.webp',
-                    'link' => '/catalog.php#age-of-empires',
+                    'link' => $catalogUrl . '#age-of-empires',
                     'footer_logo' => '/theme/assets/images/site/logo-light.svg',
                 ),
             ),
