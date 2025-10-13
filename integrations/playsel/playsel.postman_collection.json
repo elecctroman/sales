@@ -1,0 +1,162 @@
+{
+  "info": {
+    "name": "Playsel API",
+    "_postman_id": "a3e8b296-6d06-4a32-9fd1-8d2fdd4a8e3a",
+    "description": "Playsel saglayicisi icin temel API istekleri.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Generate Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/Login/Customer/Api/Token",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "Login",
+            "Customer",
+            "Api",
+            "Token"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    try {",
+              "        const json = pm.response.json();",
+              "        if (json && json.data && json.data.token) {",
+              "            pm.collectionVariables.set('token', json.data.token);",
+              "        }",
+              "        if (json && json.data && json.data.customerApiKey) {",
+              "            pm.collectionVariables.set('customerApiKey', json.data.customerApiKey);",
+              "        }",
+              "    } catch (error) {",
+              "        console.warn('Token parse failed', error);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Customer",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{token}}"
+          },
+          {
+            "key": "h-region-code",
+            "value": "{{regionCode}}",
+            "description": "Opsiyonel"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/Customer/Get",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "Customer",
+            "Get"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Products",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{token}}"
+          },
+          {
+            "key": "h-region-code",
+            "value": "{{regionCode}}",
+            "description": "Opsiyonel"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/Products/List?page={{page}}&pageSize=100&detailed=true",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "Products",
+            "List"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "{{page}}"
+            },
+            {
+              "key": "pageSize",
+              "value": "100"
+            },
+            {
+              "key": "detailed",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.playsel.com"
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "customerApiKey",
+      "value": ""
+    },
+    {
+      "key": "regionCode",
+      "value": ""
+    },
+    {
+      "key": "page",
+      "value": "1"
+    }
+  ]
+}

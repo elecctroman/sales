@@ -1,0 +1,719 @@
+<?php
+
+namespace App;
+
+class Helpers
+{
+    /**
+     * @return string
+     */
+    public static function csrfToken()
+    {
+        self::ensureSession();
+
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+
+        return $_SESSION['csrf_token'];
+    }
+
+    /**
+     * @param string $token
+     * @return bool
+     */
+    public static function verifyCsrf($token)
+    {
+        self::ensureSession();
+
+        return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+    }
+
+    /**
+     * @param string $path
+     * @return void
+     */
+    public static function redirect($path)
+    {
+        header('Location: ' . $path);
+        exit;
+    }
+
+    /**
+     * @return void
+     */
+    private static function ensureSession()
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public static function siteName()
+    {
+        try {
+            $value = Settings::get('site_name');
+            $value = $value !== null ? trim($value) : '';
+        } catch (\Throwable $exception) {
+            return 'Customer Yonetim Sistemi';
+        }
+
+        return $value !== '' ? $value : 'Customer Yonetim Sistemi';
+    }
+
+    /**
+     * @return string
+     */
+    public static function siteTagline()
+    {
+        try {
+            $value = Settings::get('site_tagline');
+            $value = $value !== null ? trim($value) : '';
+        } catch (\Throwable $exception) {
+            return 'Reseller automation platform';
+        }
+
+        return $value !== '' ? $value : 'Reseller automation platform';
+    }
+
+    /**
+     * @return string
+     */
+    public static function seoDescription()
+    {
+        try {
+            $value = Settings::get('seo_meta_description');
+            $value = $value !== null ? trim($value) : '';
+        } catch (\Throwable $exception) {
+            $value = '';
+        }
+
+        if ($value !== '') {
+            return $value;
+        }
+
+        return 'Manage reseller orders, balance, and WooCommerce synchronisation from a single dashboard.';
+    }
+
+    /**
+     * @return string
+     */
+    public static function seoKeywords()
+    {
+        try {
+            $value = Settings::get('seo_meta_keywords');
+            $value = $value !== null ? trim($value) : '';
+        } catch (\Throwable $exception) {
+            $value = '';
+        }
+
+        return $value !== '' ? $value : 'reseller panel, smm panel, automation';
+    }
+
+    /**
+     * @param string $feature
+     * @return bool
+     */
+    public static function featureEnabled($feature)
+    {
+        return FeatureToggle::isEnabled($feature);
+    }
+
+    /**
+     * @param string $key
+     * @param mixed $value
+     * @return void
+     */
+    public static function setFlash($key, $value)
+    {
+        self::ensureSession();
+
+        if (!isset($_SESSION['flash']) || !is_array($_SESSION['flash'])) {
+            $_SESSION['flash'] = array();
+        }
+
+        $_SESSION['flash'][$key] = $value;
+    }
+
+    /**
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function getFlash($key, $default = null)
+    {
+        self::ensureSession();
+
+        if (!isset($_SESSION['flash']) || !is_array($_SESSION['flash'])) {
+            return $default;
+        }
+
+        if (!array_key_exists($key, $_SESSION['flash'])) {
+            return $default;
+        }
+
+        $value = $_SESSION['flash'][$key];
+        unset($_SESSION['flash'][$key]);
+
+        if (!$_SESSION['flash']) {
+            unset($_SESSION['flash']);
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param string $path
+     * @param array $flashes
+     * @return void
+     */
+    public static function redirectWithFlash($path, $flashes = array())
+    {
+        if (!is_array($flashes)) {
+            $flashes = array();
+        }
+
+        foreach ($flashes as $key => $value) {
+            self::setFlash($key, $value);
+        }
+
+        self::redirect($path);
+    }
+
+    /**
+     * @param string $path
+     * @param string $default
+     * @return string
+     */
+    public static function normalizeRedirectPath($path, $default = '/')
+    {
+        if (!$path) {
+            return $default;
+        }
+
+        $path = trim($path);
+
+        if ($path === '' || $path === '#') {
+            return $default;
+        }
+
+        if (strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0) {
+            return $default;
+        }
+
+        if ($path[0] !== '/') {
+            return $default;
+        }
+
+        if (strpos($path, '//') === 0) {
+            return $default;
+        }
+
+        $path = strtok($path, "\r\n");
+
+        return $path ?: $default;
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    public static function sanitize($value)
+    {
+        if (is_string($value)) {
+            Lang::boot();
+            $value = Lang::line($value);
+        }
+
+        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    }
+
+    /**
+     * @param string $text
+     * @param string|null $key
+     * @return string
+     */
+    public static function translate($text, $key = null)
+    {
+        Lang::boot();
+        return Lang::line($text, $key);
+    }
+
+    /**
+     * @return string
+     */
+    public static function activeCurrency()
+    {
+        Lang::boot();
+        return Lang::locale() === 'tr' ? 'TRY' : 'USD';
+    }
+
+    /**
+     * @param float $amount
+     * @param string $baseCurrency
+     * @return string
+     */
+    public static function formatCurrency($amount, $baseCurrency = 'USD')
+    {
+        Lang::boot();
+        $activeCurrency = self::activeCurrency();
+
+        if ($activeCurrency !== $baseCurrency) {
+            $amount = Currency::convert((float)$amount, $baseCurrency, $activeCurrency);
+        }
+
+        return Currency::format((float)$amount, $activeCurrency);
+    }
+
+    /**
+     * @return float
+     */
+    public static function commissionRate()
+    {
+        $stored = Settings::get('pricing_commission_rate');
+        $rate = $stored !== null ? (float)$stored : 0.0;
+
+        if ($rate < 0) {
+            $rate = 0.0;
+        }
+
+        return $rate;
+    }
+
+    /**
+     * @param float $costTry
+     * @return float
+     */
+    public static function priceFromCostTry($costTry)
+    {
+        $cost = max(0.0, (float)$costTry);
+        $usd = Currency::convert($cost, 'TRY', 'USD');
+        $rate = self::commissionRate();
+
+        if ($rate > 0) {
+            $usd += $usd * ($rate / 100);
+        }
+
+        return round($usd, 2);
+    }
+
+    /**
+     * @param float $salePriceUsd
+     * @return float
+     */
+    public static function costTryFromSalePrice($salePriceUsd)
+    {
+        $price = max(0.0, (float)$salePriceUsd);
+        $rate = self::commissionRate();
+
+        if ($rate > 0) {
+            $price = $price / (1 + ($rate / 100));
+        }
+
+        $costTry = Currency::convert($price, 'USD', 'TRY');
+
+        return round($costTry, 2);
+    }
+
+    /**
+     * @return string
+     */
+    public static function currencySymbol()
+    {
+        Lang::boot();
+        return Currency::symbol(self::activeCurrency());
+    }
+
+    /**
+     * @param string|null $value
+     * @param int $limit
+     * @param string $suffix
+     * @return string
+     */
+    public static function truncate($value = null, $limit = 100, $suffix = '…')
+    {
+        $value = (string)$value;
+
+        if ($limit <= 0) {
+            return '';
+        }
+
+        if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+            if (mb_strlen($value, 'UTF-8') <= $limit) {
+                return $value;
+            }
+
+            return rtrim(mb_substr($value, 0, $limit, 'UTF-8')) . $suffix;
+        }
+
+        if (strlen($value) <= $limit) {
+            return $value;
+        }
+
+        return rtrim(substr($value, 0, $limit)) . $suffix;
+    }
+
+    /**
+     * Create a URL friendly slug from a string.
+     *
+     * @param string $value
+     * @param string $separator
+     * @return string
+     */
+    public static function slugify($value, $separator = '-')
+    {
+        $value = (string)$value;
+        $value = trim($value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (function_exists('iconv')) {
+            $transliterated = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
+            if ($transliterated !== false && $transliterated !== '') {
+                $value = $transliterated;
+            }
+        }
+
+        $value = strtolower($value);
+        $value = preg_replace('/[^a-z0-9]+/i', $separator, $value);
+        $value = trim($value, $separator);
+
+        return $value;
+    }
+
+    /**
+     * Render an icon, supporting both legacy font classes and Iconify identifiers.
+     *
+     * When the supplied icon value begins with "iconify:" the remainder will be
+     * used as the Iconify data-icon attribute. Otherwise the value is treated as
+     * a raw class name for an <i> element.
+     *
+     * @param string|null $icon
+     * @param array $attributes
+     * @return string
+     */
+    public static function iconHtml($icon, array $attributes = array())
+    {
+        $icon = trim((string)$icon);
+
+        if ($icon === '') {
+            return '';
+        }
+
+        $attributes = array_change_key_case($attributes, CASE_LOWER);
+        $extraClass = '';
+
+        if (isset($attributes['class']) && is_string($attributes['class'])) {
+            $extraClass = trim($attributes['class']);
+            unset($attributes['class']);
+        }
+
+        $buildAttributes = static function (array $attrs) {
+            if (!$attrs) {
+                return '';
+            }
+
+            $fragments = array();
+            foreach ($attrs as $key => $value) {
+                if ($value === null || $value === '') {
+                    continue;
+                }
+                $fragments[] = htmlspecialchars((string)$key, ENT_QUOTES, 'UTF-8') .
+                    '="' . htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8') . '"';
+            }
+
+            return $fragments ? ' ' . implode(' ', $fragments) : '';
+        };
+
+        if (strpos($icon, 'iconify:') === 0) {
+            $iconName = substr($icon, 8);
+            $iconName = trim($iconName);
+
+            if ($iconName === '') {
+                return '';
+            }
+
+            $classes = trim('iconify ' . $extraClass);
+            $iconAttributes = $attributes;
+
+            if ($classes !== '') {
+                $iconAttributes['class'] = $classes;
+            }
+
+            $iconAttributes['data-icon'] = $iconName;
+
+            return '<span' . $buildAttributes($iconAttributes) . '></span>';
+        }
+
+        $classes = trim($icon . ' ' . $extraClass);
+        $iconAttributes = $attributes;
+        if ($classes !== '') {
+            $iconAttributes['class'] = $classes;
+        }
+
+        return '<i' . $buildAttributes($iconAttributes) . '></i>';
+    }
+
+    /**
+     * @param string $title
+     * @return void
+     */
+    public static function setPageTitle($title)
+    {
+        $title = is_string($title) ? trim($title) : '';
+        if ($title === '') {
+            if (isset($GLOBALS['pageTitle'])) {
+                unset($GLOBALS['pageTitle']);
+            }
+            return;
+        }
+
+        $GLOBALS['pageTitle'] = $title;
+    }
+
+    /**
+     * @return string
+     */
+    public static function defaultProductDescription()
+    {
+        return 'For more information about this service please contact our support team.';
+    }
+
+    /**
+     * Allow controllers to override the canonical URL for the active response.
+     *
+     * @param string|null $url
+     * @return void
+     */
+    public static function setCanonicalUrl(?string $url): void
+    {
+        if (!is_string($url)) {
+            return;
+        }
+
+        $url = trim($url);
+        if ($url === '') {
+            return;
+        }
+
+        if (stripos($url, 'http://') !== 0 && stripos($url, 'https://') !== 0) {
+            $url = self::absoluteUrl($url);
+        }
+
+        $GLOBALS['pageCanonicalUrl'] = $url;
+    }
+
+    /**
+     * Build an absolute URL for a relative path.
+     *
+     * @param string $path
+     * @return string
+     */
+    public static function absoluteUrl($path)
+    {
+        $path = is_string($path) ? trim($path) : '';
+        if ($path === '') {
+            return self::canonicalUrl();
+        }
+
+        if (stripos($path, 'http://') === 0 || stripos($path, 'https://') === 0) {
+            return $path;
+        }
+
+        if ($path[0] !== '/') {
+            $path = '/' . $path;
+        }
+
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost');
+
+        return $scheme . '://' . $host . $path;
+    }
+
+    /**
+     * Generate a canonical URL for the current request.
+     *
+     * @param array $overrides
+     * @return string
+     */
+    public static function canonicalUrl(array $overrides = array())
+    {
+        $scheme = isset($overrides['scheme']) ? strtolower((string)$overrides['scheme']) : ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http');
+        $scheme = $scheme === 'https' ? 'https' : 'http';
+
+        $host = isset($overrides['host']) ? trim((string)$overrides['host']) : (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost'));
+        if ($host === '') {
+            $host = 'localhost';
+        }
+
+        if (isset($overrides['path'])) {
+            $path = trim((string)$overrides['path']);
+        } else {
+            $requestUri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+            $path = parse_url($requestUri, PHP_URL_PATH);
+            $path = $path !== null ? $path : '/';
+        }
+
+        if ($path === '') {
+            $path = '/';
+        } elseif ($path !== '/' && substr($path, -1) === '/') {
+            $path = rtrim($path, '/');
+            if ($path === '') {
+                $path = '/';
+            }
+        }
+
+        $queryData = null;
+        if (array_key_exists('query', $overrides)) {
+            $queryData = $overrides['query'];
+        } else {
+            $queryData = $_GET;
+        }
+
+        $queryString = '';
+        if ($queryData !== false) {
+            if (is_string($queryData)) {
+                parse_str($queryData, $queryData);
+            }
+
+            if (!is_array($queryData)) {
+                $queryData = array();
+            }
+
+            $queryData = self::filterCanonicalQuery($queryData);
+
+            if ($queryData) {
+                ksort($queryData);
+                $queryString = '?' . http_build_query($queryData, '', '&', PHP_QUERY_RFC3986);
+            }
+        }
+
+        return $scheme . '://' . $host . $path . $queryString;
+    }
+
+    /**
+     * @param array $query
+     * @return array
+     */
+    private static function filterCanonicalQuery(array $query)
+    {
+        $blocked = array(
+            'gclid',
+            'fbclid',
+            'msclkid',
+            'yclid',
+            'gbraid',
+            'wbraid',
+            'ref',
+            'ref_id'
+        );
+
+        $filtered = array();
+        foreach ($query as $key => $value) {
+            $normalizedKey = is_int($key) ? (string)$key : trim((string)$key);
+            if ($normalizedKey === '') {
+                continue;
+            }
+
+            $lowerKey = strtolower($normalizedKey);
+
+            if (strpos($lowerKey, 'utm_') === 0 || in_array($lowerKey, $blocked, true)) {
+                continue;
+            }
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            $filtered[$normalizedKey] = $value;
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * @return string
+     */
+    public static function currentPath()
+    {
+        $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+        $path = parse_url($uri, PHP_URL_PATH);
+
+        return $path ?: '/';
+    }
+
+    /**
+     * @param string $pattern
+     * @return bool
+     */
+    public static function isActive($pattern)
+    {
+        $current = self::currentPath();
+
+        if (function_exists('fnmatch')) {
+            return fnmatch($pattern, $current);
+        }
+
+        if ($pattern === $current) {
+            return true;
+        }
+
+        $escaped = preg_quote($pattern, '#');
+        $escaped = str_replace(['\*', '\?'], ['.*', '.'], $escaped);
+
+        return (bool)preg_match('#^' . $escaped . '$#', $current);
+    }
+
+    /**
+     * Detect the most reliable client IP address.
+     *
+     * @return string|null
+     */
+    public static function ipAddress()
+    {
+        $candidates = array('HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR');
+
+        foreach ($candidates as $key) {
+            if (!isset($_SERVER[$key]) || !$_SERVER[$key]) {
+                continue;
+            }
+
+            $value = trim((string)$_SERVER[$key]);
+
+            if ($key === 'HTTP_X_FORWARDED_FOR' && strpos($value, ',') !== false) {
+                $parts = explode(',', $value);
+                $value = trim($parts[0]);
+            }
+
+            if (filter_var($value, FILTER_VALIDATE_IP)) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Generate a product detail URL for the given slug.
+     *
+     * @param string $slug
+     * @param bool $absolute
+     * @return string
+     */
+    public static function productUrl(string $slug, bool $absolute = false): string
+    {
+        $slug = trim($slug);
+        if ($slug === '') {
+            return '#';
+        }
+
+        $path = '/product/' . rawurlencode($slug) . '/';
+
+        return $absolute ? self::absoluteUrl($path) : $path;
+    }
+}
