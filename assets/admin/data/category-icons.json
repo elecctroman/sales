@@ -1,0 +1,1528 @@
+﻿[
+    {
+        "value":  "iconify:logos:1password",
+        "label":  "1Password",
+        "tags":  [
+                     "security",
+                     "password"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:adobe",
+        "label":  "Adobe",
+        "tags":  [
+                     "creative",
+                     "suite"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:adobe-after-effects",
+        "label":  "Adobe After Effects",
+        "tags":  [
+                     "motion",
+                     "graphics",
+                     "adobe"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:adobe-illustrator",
+        "label":  "Adobe Illustrator",
+        "tags":  [
+                     "design",
+                     "vector",
+                     "adobe"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:adobe-photoshop",
+        "label":  "Adobe Photoshop",
+        "tags":  [
+                     "design",
+                     "photo",
+                     "adobe"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:adobe-premiere",
+        "label":  "Adobe Premiere Pro",
+        "tags":  [
+                     "video",
+                     "editing",
+                     "adobe"
+                 ]
+    },
+    {
+        "value":  "iconify:arcticons:agario",
+        "label":  "Agario",
+        "tags":  [
+                     "game",
+                     "arcade"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:ahrefs",
+        "label":  "Ahrefs",
+        "tags":  [
+                     "seo",
+                     "marketing"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:amazon-icon",
+        "label":  "Amazon",
+        "tags":  [
+                     "marketplace",
+                     "ecommerce",
+                     "retail"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:amongus",
+        "label":  "Among Us",
+        "tags":  [
+                     "gaming",
+                     "party"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:android-icon",
+        "label":  "Android",
+        "tags":  [
+                     "mobile",
+                     "google"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:apexlegends",
+        "label":  "Apex Legends",
+        "tags":  [
+                     "gaming",
+                     "battle-royale"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:app-store",
+        "label":  "Apple Store",
+        "tags":  [
+                     "apple",
+                     "ios",
+                     "apps"
+                 ]
+    },
+    {
+        "value":  "iconify:hugeicons:artificial-intelligence-01",
+        "label":  "Artificial Intelligence 1",
+        "tags":  [
+                     "ai",
+                     "automation",
+                     "robotics"
+                 ]
+    },
+    {
+        "value":  "iconify:hugeicons:artificial-intelligence-02",
+        "label":  "Artificial Intelligence 2",
+        "tags":  [
+                     "ai",
+                     "bot",
+                     "machine-learning"
+                 ]
+    },
+    {
+        "value":  "iconify:hugeicons:artificial-intelligence-03",
+        "label":  "Artificial Intelligence 3",
+        "tags":  [
+                     "ai",
+                     "innovation"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:asana",
+        "label":  "Asana",
+        "tags":  [
+                     "project",
+                     "productivity"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:autocad",
+        "label":  "AutoCAD",
+        "tags":  [
+                     "cad",
+                     "design"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:autodesk",
+        "label":  "Autodesk 3ds Max",
+        "tags":  [
+                     "3d",
+                     "cad"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:maya",
+        "label":  "Autodesk Maya",
+        "tags":  [
+                     "3d",
+                     "animation"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:avast",
+        "label":  "Avast",
+        "tags":  [
+                     "security",
+                     "antivirus"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:aws",
+        "label":  "AWS",
+        "tags":  [
+                     "cloud",
+                     "hosting"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:microsoft-azure",
+        "label":  "Azure",
+        "tags":  [
+                     "cloud",
+                     "hosting"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:binance",
+        "label":  "Binance",
+        "tags":  [
+                     "crypto",
+                     "exchange"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:bitbucket",
+        "label":  "Bitbucket",
+        "tags":  [
+                     "development",
+                     "code"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:blender",
+        "label":  "Blender",
+        "tags":  [
+                     "3d",
+                     "animation"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:battledotnet",
+        "label":  "Blizzard",
+        "tags":  [
+                     "gaming",
+                     "publisher"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:bybit",
+        "label":  "Bybit",
+        "tags":  [
+                     "crypto",
+                     "exchange"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:callofduty",
+        "label":  "Call of Duty",
+        "tags":  [
+                     "gaming",
+                     "fps"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:canva",
+        "label":  "Canva",
+        "tags":  [
+                     "design",
+                     "marketing"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:capcut-icon",
+        "label":  "Capcut",
+        "tags":  [
+                     "video",
+                     "editing",
+                     "creator"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:clashofclans",
+        "label":  "Clash of Clans",
+        "tags":  [
+                     "gaming",
+                     "strategy"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:clashroyale",
+        "label":  "Clash Royale",
+        "tags":  [
+                     "gaming",
+                     "strategy"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:clickup-icon",
+        "label":  "ClickUp",
+        "tags":  [
+                     "project",
+                     "productivity"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:cloudflare",
+        "label":  "Cloudflare",
+        "tags":  [
+                     "cdn",
+                     "security"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:coinbase",
+        "label":  "Coinbase",
+        "tags":  [
+                     "crypto",
+                     "exchange"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:confluence",
+        "label":  "Confluence",
+        "tags":  [
+                     "documentation",
+                     "wiki"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:coreldraw",
+        "label":  "CorelDRAW",
+        "tags":  [
+                     "design",
+                     "vector"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:counterstrike",
+        "label":  "CS:GO",
+        "tags":  [
+                     "gaming",
+                     "fps"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:dashlane",
+        "label":  "Dashlane",
+        "tags":  [
+                     "security",
+                     "password"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:dayz",
+        "label":  "DayZ",
+        "tags":  [
+                     "gaming",
+                     "survival"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:diablo",
+        "label":  "Diablo IV",
+        "tags":  [
+                     "gaming",
+                     "arpg"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:digitalocean",
+        "label":  "DigitalOcean",
+        "tags":  [
+                     "cloud",
+                     "hosting"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:discord-icon",
+        "label":  "Discord",
+        "tags":  [
+                     "chat",
+                     "community",
+                     "gaming"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:disneyplus",
+        "label":  "Disney+",
+        "tags":  [
+                     "streaming",
+                     "entertainment"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:docker-icon",
+        "label":  "Docker",
+        "tags":  [
+                     "containers",
+                     "devops"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:dota2",
+        "label":  "Dota 2",
+        "tags":  [
+                     "gaming",
+                     "moba"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:dropbox",
+        "label":  "Dropbox",
+        "tags":  [
+                     "cloud",
+                     "storage"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:drupal",
+        "label":  "Drupal",
+        "tags":  [
+                     "cms",
+                     "web"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:duolingo",
+        "label":  "Duolingo",
+        "tags":  [
+                     "education",
+                     "language"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:ea",
+        "label":  "EA Games",
+        "tags":  [
+                     "gaming",
+                     "publisher"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:eclipse-icon",
+        "label":  "Eclipse IDE",
+        "tags":  [
+                     "java",
+                     "ide"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:elementor",
+        "label":  "Elementor",
+        "tags":  [
+                     "wordpress",
+                     "builder"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:envato",
+        "label":  "Envato",
+        "tags":  [
+                     "marketplace",
+                     "creative"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:epicgames",
+        "label":  "Epic Games",
+        "tags":  [
+                     "gaming",
+                     "store"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:eset",
+        "label":  "ESET",
+        "tags":  [
+                     "security",
+                     "antivirus"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:microsoft-excel",
+        "label":  "Excel",
+        "tags":  [
+                     "office",
+                     "spreadsheet"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:facebook",
+        "label":  "Facebook",
+        "tags":  [
+                     "social",
+                     "meta"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:fallguys",
+        "label":  "Fall Guys",
+        "tags":  [
+                     "gaming",
+                     "party"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:figma",
+        "label":  "Figma",
+        "tags":  [
+                     "design",
+                     "ui"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:finalfantasy",
+        "label":  "Final Fantasy XIV",
+        "tags":  [
+                     "gaming",
+                     "mmo"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:fortnite",
+        "label":  "Fortnite",
+        "tags":  [
+                     "gaming",
+                     "battle-royale"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:garena",
+        "label":  "Free Fire",
+        "tags":  [
+                     "gaming",
+                     "battle-royale"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:freepik",
+        "label":  "Freepik",
+        "tags":  [
+                     "illustration",
+                     "asset"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:genshinimpact",
+        "label":  "Genshin Impact",
+        "tags":  [
+                     "gaming",
+                     "rpg"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:github-icon",
+        "label":  "GitHub",
+        "tags":  [
+                     "development",
+                     "code"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:gitlab",
+        "label":  "GitLab",
+        "tags":  [
+                     "development",
+                     "devops"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:gmail",
+        "label":  "Gmail",
+        "tags":  [
+                     "email",
+                     "google"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:google-ads",
+        "label":  "Google Ads",
+        "tags":  [
+                     "ads",
+                     "marketing"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:google-analytics",
+        "label":  "Google Analytics",
+        "tags":  [
+                     "analytics",
+                     "google"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:google-cloud",
+        "label":  "Google Cloud",
+        "tags":  [
+                     "cloud",
+                     "hosting"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:google-docs",
+        "label":  "Google Docs",
+        "tags":  [
+                     "document",
+                     "cloud"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:google-drive",
+        "label":  "Google Drive",
+        "tags":  [
+                     "cloud",
+                     "storage"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:google-play-icon",
+        "label":  "Google Play",
+        "tags":  [
+                     "android",
+                     "apps",
+                     "store"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:google-sheets",
+        "label":  "Google Sheets",
+        "tags":  [
+                     "spreadsheet",
+                     "cloud"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:google-slides",
+        "label":  "Google Slides",
+        "tags":  [
+                     "presentation",
+                     "cloud"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:google-workspace",
+        "label":  "Google Workspace",
+        "tags":  [
+                     "google",
+                     "productivity"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:grammarly",
+        "label":  "Grammarly",
+        "tags":  [
+                     "writing",
+                     "productivity"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:heroku-icon",
+        "label":  "Heroku",
+        "tags":  [
+                     "cloud",
+                     "platform"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:hotjar",
+        "label":  "Hotjar",
+        "tags":  [
+                     "analytics",
+                     "ux"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:hubspot",
+        "label":  "HubSpot",
+        "tags":  [
+                     "crm",
+                     "marketing"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:instagram-icon",
+        "label":  "Instagram",
+        "tags":  [
+                     "social",
+                     "photo"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:intellij-idea",
+        "label":  "IntelliJ IDEA",
+        "tags":  [
+                     "java",
+                     "ide"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:intercom",
+        "label":  "Intercom",
+        "tags":  [
+                     "support",
+                     "chat"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:icloud",
+        "label":  "iCloud",
+        "tags":  [
+                     "cloud",
+                     "apple"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:apple",
+        "label":  "iOS",
+        "tags":  [
+                     "mobile",
+                     "apple"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:istock",
+        "label":  "iStock",
+        "tags":  [
+                     "stock",
+                     "photo"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:jetbrains",
+        "label":  "JetBrains",
+        "tags":  [
+                     "ide",
+                     "development"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:jira",
+        "label":  "Jira",
+        "tags":  [
+                     "project",
+                     "issue-tracking"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:joomla",
+        "label":  "Joomla",
+        "tags":  [
+                     "cms",
+                     "web"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:kaspersky",
+        "label":  "Kaspersky",
+        "tags":  [
+                     "security",
+                     "antivirus"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:kubernetes",
+        "label":  "Kubernetes",
+        "tags":  [
+                     "containers",
+                     "devops"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:lastpass",
+        "label":  "LastPass",
+        "tags":  [
+                     "security",
+                     "password"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:leagueoflegends",
+        "label":  "League of Legends",
+        "tags":  [
+                     "gaming",
+                     "moba"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:linkedin-icon",
+        "label":  "LinkedIn",
+        "tags":  [
+                     "social",
+                     "business"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:linux-tux",
+        "label":  "Linux",
+        "tags":  [
+                     "operating-system",
+                     "tux"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:lostark",
+        "label":  "Lost Ark",
+        "tags":  [
+                     "gaming",
+                     "mmo"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:macos",
+        "label":  "macOS",
+        "tags":  [
+                     "operating-system",
+                     "apple"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:magento",
+        "label":  "Magento",
+        "tags":  [
+                     "ecommerce",
+                     "store"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:mailchimp",
+        "label":  "Mailchimp",
+        "tags":  [
+                     "email",
+                     "marketing"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:malwarebytes",
+        "label":  "Malwarebytes",
+        "tags":  [
+                     "security",
+                     "antivirus"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:mcafee",
+        "label":  "McAfee",
+        "tags":  [
+                     "security",
+                     "antivirus"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:mega",
+        "label":  "MEGA",
+        "tags":  [
+                     "cloud",
+                     "storage"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:meta",
+        "label":  "Meta Business Suite",
+        "tags":  [
+                     "facebook",
+                     "marketing"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:metamask",
+        "label":  "MetaMask",
+        "tags":  [
+                     "wallet",
+                     "crypto"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:microsoftoffice",
+        "label":  "Microsoft Office",
+        "tags":  [
+                     "productivity",
+                     "suite"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:microsoft-teams",
+        "label":  "Microsoft Teams",
+        "tags":  [
+                     "collaboration",
+                     "microsoft"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:minecraft",
+        "label":  "Minecraft",
+        "tags":  [
+                     "gaming",
+                     "sandbox"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:mobilelegends",
+        "label":  "Mobile Legends",
+        "tags":  [
+                     "gaming",
+                     "moba"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:monday",
+        "label":  "Monday.com",
+        "tags":  [
+                     "project",
+                     "collaboration"
+                 ]
+    },
+    {
+        "value":  "iconify:arcticons:motionleap",
+        "label":  "Motion",
+        "tags":  [
+                     "animation",
+                     "video"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:moz",
+        "label":  "Moz",
+        "tags":  [
+                     "seo",
+                     "marketing"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:netflix",
+        "label":  "Netflix",
+        "tags":  [
+                     "streaming",
+                     "video"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:netlify",
+        "label":  "Netlify",
+        "tags":  [
+                     "hosting",
+                     "deployment"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:nintendo",
+        "label":  "Nintendo",
+        "tags":  [
+                     "gaming",
+                     "console"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:norton",
+        "label":  "Norton",
+        "tags":  [
+                     "security",
+                     "antivirus"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:notion-icon",
+        "label":  "Notion",
+        "tags":  [
+                     "productivity",
+                     "notes"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:microsoft-onedrive",
+        "label":  "OneDrive",
+        "tags":  [
+                     "cloud",
+                     "storage"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:openai",
+        "label":  "OpenAI",
+        "tags":  [
+                     "ai",
+                     "chatgpt"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:opencart",
+        "label":  "OpenCart",
+        "tags":  [
+                     "ecommerce",
+                     "store"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:pathofexile",
+        "label":  "Path of Exile",
+        "tags":  [
+                     "gaming",
+                     "arpg"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:payoneer",
+        "label":  "Payoneer",
+        "tags":  [
+                     "payments",
+                     "finance"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:paypal",
+        "label":  "PayPal",
+        "tags":  [
+                     "payments",
+                     "finance"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:pinterest",
+        "label":  "Pinterest",
+        "tags":  [
+                     "social",
+                     "inspiration"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:pixlr",
+        "label":  "Pixlr",
+        "tags":  [
+                     "photo",
+                     "editor"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:playstation",
+        "label":  "PlayStation",
+        "tags":  [
+                     "gaming",
+                     "console",
+                     "sony"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:microsoft-powerpoint",
+        "label":  "PowerPoint",
+        "tags":  [
+                     "office",
+                     "presentation"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:prestashop",
+        "label":  "PrestaShop",
+        "tags":  [
+                     "ecommerce",
+                     "store"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:prime-video",
+        "label":  "Prime Video",
+        "tags":  [
+                     "streaming",
+                     "amazon"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:pubg",
+        "label":  "PUBG",
+        "tags":  [
+                     "gaming",
+                     "battle-royale"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:pycharm",
+        "label":  "PyCharm",
+        "tags":  [
+                     "python",
+                     "ide"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:rainbowsix",
+        "label":  "Rainbow Six Siege",
+        "tags":  [
+                     "gaming",
+                     "fps"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:reddit-icon",
+        "label":  "Reddit",
+        "tags":  [
+                     "social",
+                     "community"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:riotgames",
+        "label":  "Riot Games",
+        "tags":  [
+                     "gaming",
+                     "esports"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:roblox",
+        "label":  "Roblox",
+        "tags":  [
+                     "gaming",
+                     "sandbox"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:rocketleague",
+        "label":  "Rocket League",
+        "tags":  [
+                     "gaming",
+                     "sports"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:rockstar",
+        "label":  "Rockstar Games",
+        "tags":  [
+                     "gaming",
+                     "publisher"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:salesforce",
+        "label":  "Salesforce",
+        "tags":  [
+                     "crm",
+                     "cloud"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:seaofthieves",
+        "label":  "Sea of Thieves",
+        "tags":  [
+                     "gaming",
+                     "adventure"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:semrush",
+        "label":  "Semrush",
+        "tags":  [
+                     "seo",
+                     "marketing"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:sendgrid",
+        "label":  "SendGrid",
+        "tags":  [
+                     "email",
+                     "transactional"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:seoptimer",
+        "label":  "SEOptimer",
+        "tags":  [
+                     "seo",
+                     "audits"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:shopify",
+        "label":  "Shopify",
+        "tags":  [
+                     "ecommerce",
+                     "store"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:shutterstock",
+        "label":  "Shutterstock",
+        "tags":  [
+                     "stock",
+                     "photo",
+                     "asset"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:signal",
+        "label":  "Signal",
+        "tags":  [
+                     "chat",
+                     "privacy"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:sketch",
+        "label":  "Sketch",
+        "tags":  [
+                     "design",
+                     "ui"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:sketchup-icon",
+        "label":  "SketchUp",
+        "tags":  [
+                     "3d",
+                     "design"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:skype",
+        "label":  "Skype",
+        "tags":  [
+                     "call",
+                     "communication"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:slack",
+        "label":  "Slack",
+        "tags":  [
+                     "collaboration",
+                     "chat"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:snapchat",
+        "label":  "Snapchat",
+        "tags":  [
+                     "social",
+                     "chat"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:spotify",
+        "label":  "Spotify",
+        "tags":  [
+                     "music",
+                     "audio"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:squarespace",
+        "label":  "Squarespace",
+        "tags":  [
+                     "website",
+                     "builder"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:starwars",
+        "label":  "Star Wars: The Old Republic",
+        "tags":  [
+                     "gaming",
+                     "mmo"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:steam",
+        "label":  "Steam",
+        "tags":  [
+                     "gaming",
+                     "pc"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:storytel",
+        "label":  "Storytel",
+        "tags":  [
+                     "audiobook",
+                     "entertainment"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:stripe",
+        "label":  "Stripe",
+        "tags":  [
+                     "payments",
+                     "finance"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:telegram",
+        "label":  "Telegram",
+        "tags":  [
+                     "chat",
+                     "messaging"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:tiktok-icon",
+        "label":  "TikTok",
+        "tags":  [
+                     "video",
+                     "social"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:tradingview",
+        "label":  "TradingView",
+        "tags":  [
+                     "finance",
+                     "charts"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:trello",
+        "label":  "Trello",
+        "tags":  [
+                     "project",
+                     "kanban"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:twitch",
+        "label":  "Twitch",
+        "tags":  [
+                     "streaming",
+                     "gaming"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:twitter",
+        "label":  "Twitter",
+        "tags":  [
+                     "social",
+                     "news"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:ubersuggest",
+        "label":  "Ubersuggest",
+        "tags":  [
+                     "seo",
+                     "marketing"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:ubisoft",
+        "label":  "Ubisoft",
+        "tags":  [
+                     "gaming",
+                     "publisher"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:unity",
+        "label":  "Unity",
+        "tags":  [
+                     "game-engine",
+                     "development"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:unreal-engine",
+        "label":  "Unreal Engine",
+        "tags":  [
+                     "game-engine",
+                     "development"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:valorant",
+        "label":  "Valorant",
+        "tags":  [
+                     "gaming",
+                     "esports"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:vercel-icon",
+        "label":  "Vercel",
+        "tags":  [
+                     "hosting",
+                     "deployment"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:viber",
+        "label":  "Viber",
+        "tags":  [
+                     "chat",
+                     "messaging"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:microsoft-visio",
+        "label":  "Visio",
+        "tags":  [
+                     "microsoft",
+                     "diagram"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:visual-studio-code",
+        "label":  "Visual Studio Code",
+        "tags":  [
+                     "code",
+                     "editor"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:warframe",
+        "label":  "Warframe",
+        "tags":  [
+                     "gaming",
+                     "looter-shooter"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:wechat",
+        "label":  "WeChat",
+        "tags":  [
+                     "chat",
+                     "china"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:whatsapp-icon",
+        "label":  "WhatsApp",
+        "tags":  [
+                     "chat",
+                     "messaging"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:microsoft-windows",
+        "label":  "Windows",
+        "tags":  [
+                     "operating-system",
+                     "microsoft"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:wise",
+        "label":  "Wise",
+        "tags":  [
+                     "payments",
+                     "finance"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:wix",
+        "label":  "Wix",
+        "tags":  [
+                     "website",
+                     "builder"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:woocommerce",
+        "label":  "WooCommerce",
+        "tags":  [
+                     "ecommerce",
+                     "wordpress"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:woorank",
+        "label":  "WooRank",
+        "tags":  [
+                     "seo",
+                     "analytics"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:microsoft-word",
+        "label":  "Word",
+        "tags":  [
+                     "office",
+                     "document"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:wordpress",
+        "label":  "WordPress",
+        "tags":  [
+                     "cms",
+                     "website"
+                 ]
+    },
+    {
+        "value":  "iconify:simple-icons:worldofwarcraft",
+        "label":  "World of Warcraft",
+        "tags":  [
+                     "gaming",
+                     "mmo"
+                 ]
+    },
+    {
+        "value":  "iconify:arcticons:writesonic",
+        "label":  "Writesonic",
+        "tags":  [
+                     "ai",
+                     "copywriting"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:xbox-icon",
+        "label":  "Xbox",
+        "tags":  [
+                     "gaming",
+                     "console",
+                     "microsoft"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:xcode",
+        "label":  "Xcode",
+        "tags":  [
+                     "apple",
+                     "ide"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:youtube-icon",
+        "label":  "YouTube",
+        "tags":  [
+                     "video",
+                     "google"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:zendesk",
+        "label":  "Zendesk",
+        "tags":  [
+                     "support",
+                     "helpdesk"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:zenmate",
+        "label":  "ZenMate",
+        "tags":  [
+                     "vpn",
+                     "privacy"
+                 ]
+    },
+    {
+        "value":  "iconify:logos:zoom",
+        "label":  "Zoom",
+        "tags":  [
+                     "meeting",
+                     "video"
+                 ]
+    }
+]
