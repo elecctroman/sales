@@ -102,6 +102,44 @@ class ApiToken
     }
 
     /**
+     * Locate the most recent API token for a user without creating a new one.
+     *
+     * @param int $userId
+     * @return array|null
+     */
+    public static function findLatestForUser($userId)
+    {
+        $userId = (int)$userId;
+        if ($userId <= 0) {
+            return null;
+        }
+
+        try {
+            $pdo = Database::connection();
+        } catch (\Throwable $exception) {
+            return null;
+        }
+
+        $stmt = $pdo->prepare('SELECT * FROM api_tokens WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 1');
+        $stmt->execute(array('user_id' => $userId));
+        $existing = $stmt->fetch();
+
+        if (!$existing) {
+            return null;
+        }
+
+        return array(
+            'id' => (int)$existing['id'],
+            'user_id' => (int)$existing['user_id'],
+            'token' => $existing['token'],
+            'label' => isset($existing['label']) ? $existing['label'] : null,
+            'webhook_url' => isset($existing['webhook_url']) ? $existing['webhook_url'] : null,
+            'created_at' => isset($existing['created_at']) ? $existing['created_at'] : null,
+            'last_used_at' => isset($existing['last_used_at']) ? $existing['last_used_at'] : null,
+        );
+    }
+
+    /**
      * Update the webhook URL for a token.
      *
      * @param int $tokenId
@@ -115,6 +153,25 @@ class ApiToken
         $stmt->execute(array(
             'url' => $webhookUrl,
             'id' => $tokenId,
+        ));
+    }
+
+    /**
+     * Update both the label and webhook URL for the provided token.
+     *
+     * @param int $tokenId
+     * @param string|null $label
+     * @param string|null $webhookUrl
+     * @return void
+     */
+    public static function updateSettings($tokenId, $label, $webhookUrl)
+    {
+        $pdo = Database::connection();
+        $stmt = $pdo->prepare('UPDATE api_tokens SET label = :label, webhook_url = :webhook WHERE id = :id');
+        $stmt->execute(array(
+            'label' => $label !== null && $label !== '' ? $label : null,
+            'webhook' => $webhookUrl !== null && $webhookUrl !== '' ? $webhookUrl : null,
+            'id' => (int)$tokenId,
         ));
     }
 
@@ -244,21 +301,10 @@ class ApiToken
      */
     public static function getOrCreateForUser($userId)
     {
-        $pdo = Database::connection();
-        $stmt = $pdo->prepare('SELECT * FROM api_tokens WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 1');
-        $stmt->execute(array('user_id' => $userId));
-        $existing = $stmt->fetch();
+        $existing = self::findLatestForUser($userId);
 
         if ($existing) {
-            return array(
-                'id' => (int)$existing['id'],
-                'user_id' => (int)$existing['user_id'],
-                'token' => $existing['token'],
-                'label' => isset($existing['label']) ? $existing['label'] : null,
-                'webhook_url' => isset($existing['webhook_url']) ? $existing['webhook_url'] : null,
-                'created_at' => isset($existing['created_at']) ? $existing['created_at'] : null,
-                'last_used_at' => isset($existing['last_used_at']) ? $existing['last_used_at'] : null,
-            );
+            return $existing;
         }
 
         $issued = self::issueToken($userId);

@@ -545,6 +545,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const cartPage = document.querySelector('[data-cart-page]');
     if (cartPage) {
+        cartPage.addEventListener('submit', async (event) => {
+            const couponForm = event.target.closest('[data-cart-coupon-form]');
+            if (!couponForm) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const input = couponForm.querySelector('input[name="coupon_code"]');
+            const submitButton = couponForm.querySelector('button[type="submit"]');
+            const code = input ? input.value.trim() : '';
+
+            if (code === '') {
+                showToast('Kupon', 'Lütfen kupon kodu giriniz.');
+                return;
+            }
+
+            const originalText = submitButton ? submitButton.textContent : '';
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Uygulaniyor...';
+            }
+
+            try {
+                const data = await requestCart({
+                    action: 'apply_coupon',
+                    coupon_code: code,
+                });
+                showToast('Kupon Uygulandi', data.message || 'Kupon başarıyla uygulandı.');
+                setTimeout(() => window.location.reload(), 200);
+            } catch (error) {
+                showToast('Kupon Hatası', error.message || 'Kupon uygulanamadı.');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText || 'Kuponu Uygula';
+                }
+            }
+        });
+
         cartPage.addEventListener('click', async (event) => {
             const stepButton = event.target.closest('[data-cart-step]');
             if (stepButton) {
@@ -578,6 +617,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => window.location.reload(), 200);
                 } catch (error) {
                     showToast('Islem Basarisiz', error.message || 'Lutfen tekrar deneyin.');
+                }
+                return;
+            }
+
+            const couponRemove = event.target.closest('[data-cart-coupon-remove]');
+            if (couponRemove) {
+                if (couponRemove.disabled) {
+                    return;
+                }
+
+                couponRemove.disabled = true;
+                try {
+                    const data = await requestCart({ action: 'remove_coupon' });
+                    showToast('Kupon Kaldırıldı', data.message || 'Kupon kaldırıldı.');
+                    setTimeout(() => window.location.reload(), 200);
+                } catch (error) {
+                    showToast('Kupon Hatası', error.message || 'Kupon kaldırılamadı.');
+                    couponRemove.disabled = false;
                 }
                 return;
             }
@@ -768,6 +825,85 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.key === 'Escape') {
             closeCheckoutModal();
         }
+    });
+
+    document.querySelectorAll('[data-copy-target]').forEach((button) => {
+        const targetSelector = button.getAttribute('data-copy-target');
+        if (!targetSelector) {
+            return;
+        }
+
+        const originalLabel = button.textContent.trim();
+        const successLabel = button.getAttribute('data-copy-success') || 'Kopyalandı!';
+
+        const resetState = () => {
+            button.classList.remove('is-copied');
+            if (originalLabel !== '') {
+                button.textContent = originalLabel;
+            }
+        };
+
+        const showSuccess = () => {
+            if (successLabel !== '') {
+                button.textContent = successLabel;
+            }
+            button.classList.add('is-copied');
+            setTimeout(() => {
+                resetState();
+            }, 2000);
+        };
+
+        const fallbackCopy = (value) => {
+            const helper = document.createElement('textarea');
+            helper.value = value;
+            helper.setAttribute('readonly', 'readonly');
+            helper.style.position = 'absolute';
+            helper.style.left = '-9999px';
+            document.body.appendChild(helper);
+            helper.select();
+            try {
+                const copied = document.execCommand('copy');
+                if (copied) {
+                    showSuccess();
+                }
+            } catch (error) {
+                console.warn('Copy command is not supported', error);
+            }
+            document.body.removeChild(helper);
+        };
+
+        const handleCopy = () => {
+            const target = document.querySelector(targetSelector);
+            if (!target) {
+                return;
+            }
+
+            let value = '';
+            if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+                value = target.value;
+            } else {
+                value = target.textContent || '';
+            }
+
+            if (value === '') {
+                return;
+            }
+
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                navigator.clipboard.writeText(value).then(() => {
+                    showSuccess();
+                }).catch(() => {
+                    fallbackCopy(value);
+                });
+            } else {
+                fallbackCopy(value);
+            }
+        };
+
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            handleCopy();
+        });
     });
 });
 
