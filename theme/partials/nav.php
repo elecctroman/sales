@@ -56,7 +56,7 @@ foreach ($notifications as $notificationItem) {
 <header class="site-header">
     <div class="site-header__main">
         <a class="site-header__brand" href="/">OyunHesap<span>.com.tr</span></a>
-        <form class="site-header__search" action="/catalog.php">
+        <form class="site-header__search" action="/kategori/">
             <input type="search" name="q" placeholder="PUBG">
             <button type="submit" aria-label="Ara">
                 <span class="material-icons">search</span>
@@ -100,20 +100,14 @@ foreach ($notifications as $notificationItem) {
                     </div>
                 </div>
             </div>
-            <div class="site-header__actions-group">
-                <a href="#" class="site-header__pill">
-                    <span class="material-icons">language</span>
-                    <span>Turkce</span>
-                </a>
-            </div>
             <?php if (!$isLoggedInHeader): ?>
                 <a href="/login.php" class="site-header__pill site-header__pill--primary">
                     <span class="material-icons">login</span>
-                    <span>Giri&#351; Yap</span>
+                    <span>Giriş Yap</span>
                 </a>
                 <a href="/register.php" class="site-header__pill site-header__pill--success">
                     <span class="material-icons">person_add</span>
-                    <span>Kay&#305;t Ol</span>
+                    <span>Kayıt Ol</span>
                 </a>
             <?php else: ?>
                 <a href="/account.php" class="site-header__user" data-account-link>
@@ -134,10 +128,10 @@ foreach ($notifications as $notificationItem) {
     <nav class="site-header__nav">
         <ul>
             <?php foreach ($navCategories as $category): ?>
-                    $path = isset($category['path']) && $category['path'] !== '' ? (string)$category['path'] : $slug;
-                    $categoryUrl = isset($category['url']) && $category['url'] !== '' ? (string)$category['url'] : Helpers::categoryUrl($path);
                 <?php
                     $slug = !empty($category['slug']) ? $category['slug'] : 'category-' . (int)$category['id'];
+                    $path = isset($category['path']) && $category['path'] !== '' ? (string)$category['path'] : $slug;
+                    $categoryUrl = isset($category['url']) && $category['url'] !== '' ? (string)$category['url'] : Helpers::categoryUrl($path);
                     $hasChildren = !empty($category['children']);
                     $iconClass = isset($category['icon']) ? trim((string)$category['icon']) : '';
                     $image = isset($category['image']) ? trim((string)$category['image']) : '';
@@ -149,7 +143,7 @@ foreach ($notifications as $notificationItem) {
                     }
                 ?>
                 <li class="site-header__nav-item<?= $hasChildren ? ' has-children' : '' ?>">
-                    <a href="/catalog.php#<?= htmlspecialchars($slug) ?>" class="site-header__nav-link">
+                    <a href="<?= htmlspecialchars($categoryUrl, ENT_QUOTES, 'UTF-8') ?>" class="site-header__nav-link">
                         <span class="site-header__nav-avatar">
                             <?php if ($iconClass !== ''): ?>
                                 <?php if ($iconifyName !== ''): ?>
@@ -176,7 +170,12 @@ foreach ($notifications as $notificationItem) {
                     <?php if ($hasChildren): ?>
                         <div class="site-header__nav-dropdown">
                             <?php foreach ($category['children'] as $child): ?>
-                                <a href="/catalog.php#<?= htmlspecialchars($child['slug']) ?>" class="site-header__nav-dropdown-link">
+                                <?php
+                                    $childSlug = isset($child['slug']) && $child['slug'] !== '' ? (string)$child['slug'] : ('category-' . (int)$child['id']);
+                                    $childPath = isset($child['path']) && $child['path'] !== '' ? (string)$child['path'] : $childSlug;
+                                    $childUrl = isset($child['url']) && $child['url'] !== '' ? (string)$child['url'] : Helpers::categoryUrl($childPath);
+                                ?>
+                                <a href="<?= htmlspecialchars($childUrl, ENT_QUOTES, 'UTF-8') ?>" class="site-header__nav-dropdown-link">
                                     <?= htmlspecialchars($child['name']) ?>
                                 </a>
                             <?php endforeach; ?>

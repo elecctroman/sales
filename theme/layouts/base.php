@@ -29,13 +29,20 @@ $notificationPayload = array(
     }, 0),
 );
 $notificationJson = json_encode($notificationPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+$siteName = Helpers::siteName();
+$pageHeading = isset($pageTitle) && $pageTitle !== '' ? $pageTitle : $siteName;
+$documentTitle = $pageHeading !== $siteName ? $pageHeading . ' | ' . $siteName : $siteName;
+$metaDescription = Helpers::seoDescription();
+$metaKeywords = Helpers::seoKeywords();
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') . ' | ' : '' ?>Storefront</title>
+    <title><?= htmlspecialchars($documentTitle, ENT_QUOTES, 'UTF-8') ?></title>
+    <meta name="description" content="<?= htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8') ?>">
+    <meta name="keywords" content="<?= htmlspecialchars($metaKeywords, ENT_QUOTES, 'UTF-8') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://code.iconify.design" crossorigin>

@@ -25,7 +25,7 @@ $hasCategory = isset($categoryData['id']) && $categoryData['id'] !== null;
             <?php endif; ?>
         </div>
         <?php if ($hasCategory && $productCount > 0): ?>
-            <span class="badge badge-pill"><?= htmlspecialchars($productCount) ?> ürün</span>
+            <span class="badge badge-pill"><?= htmlspecialchars($productCount) ?> Ã¼rÃ¼n</span>
         <?php endif; ?>
     </div>
     <?php if ($breadcrumbs): ?>
@@ -51,7 +51,7 @@ $hasCategory = isset($categoryData['id']) && $categoryData['id'] !== null;
         <div class="section-header">
             <div>
                 <h2>Alt Kategoriler</h2>
-                <small>Aradýðýnýz ürüne hýzlýca ulaþýn</small>
+                <small>AradÄ±ÄŸÄ±nÄ±z Ã¼rÃ¼ne hÄ±zlÄ±ca ulaÅŸÄ±n</small>
             </div>
         </div>
         <div class="catalog__grid category-subcategories__grid">
@@ -66,11 +66,11 @@ $hasCategory = isset($categoryData['id']) && $categoryData['id'] !== null;
                         <div class="product-card__meta">
                             <h3><a href="<?= htmlspecialchars($childUrl) ?>"><?= htmlspecialchars($childName) ?></a></h3>
                             <?php if ($childCount !== null): ?>
-                                <p class="product-card__summary"><?= htmlspecialchars($childCount) ?> ürün</p>
+                                <p class="product-card__summary"><?= htmlspecialchars($childCount) ?> Ã¼rÃ¼n</p>
                             <?php endif; ?>
                         </div>
                         <div class="product-card__footer">
-                            <a class="product-card__button product-card__button--ghost" href="<?= htmlspecialchars($childUrl) ?>">Incele</a>
+                            <a class="product-card__button product-card__button--ghost" href="<?= htmlspecialchars($childUrl) ?>">Ä°ncele</a>
                         </div>
                     </div>
                 </article>
@@ -82,8 +82,8 @@ $hasCategory = isset($categoryData['id']) && $categoryData['id'] !== null;
 <?php if ($products): ?>
     <section class="catalog">
         <header class="section-header">
-            <h2><?= htmlspecialchars($categoryName) ?> ürünleri</h2>
-            <p class="text-muted">Satýn alabileceðiniz ürünler listeleniyor.</p>
+            <h2><?= htmlspecialchars($categoryName) ?> ÃœrÃ¼nleri</h2>
+            <p class="text-muted">SatÄ±n alabileceÄŸiniz Ã¼rÃ¼nler listeleniyor.</p>
         </header>
         <div class="catalog__grid">
             <?php foreach ($products as $product): ?>
@@ -102,14 +102,14 @@ $hasCategory = isset($categoryData['id']) && $categoryData['id'] !== null;
                 ?>
                 <article class="product-card<?= $inStock ? '' : ' product-card--out' ?>" data-product-card>
                     <div class="product-card__media">
-                        <a href="<?= htmlspecialchars($detailUrl) ?>" class="product-card__link" aria-label="<?= htmlspecialchars('View ' . ($product['name'] ?? 'Product')) ?>">
-                            <img src="<?= htmlspecialchars($product['image'] ?? $categoryImage) ?>" alt="<?= htmlspecialchars($product['name'] ?? 'Product') ?>">
+                        <a href="<?= htmlspecialchars($detailUrl) ?>" class="product-card__link" aria-label="<?= htmlspecialchars(($product['name'] ?? 'ÃœrÃ¼n') . ' detayÄ±nÄ± gÃ¶rÃ¼ntÃ¼le') ?>">
+                            <img src="<?= htmlspecialchars($product['image'] ?? $categoryImage) ?>" alt="<?= htmlspecialchars($product['name'] ?? 'ÃœrÃ¼n') ?>">
                         </a>
                     </div>
                     <div class="product-card__body">
                         <div class="product-card__meta">
                             <h3>
-                                <a href="<?= htmlspecialchars($detailUrl) ?>"><?= htmlspecialchars($product['name'] ?? 'Product') ?></a>
+                                <a href="<?= htmlspecialchars($detailUrl) ?>"><?= htmlspecialchars($product['name'] ?? 'ÃœrÃ¼n') ?></a>
                             </h3>
                             <?php if ($categoryNameLabel !== ''): ?>
                                 <p class="product-card__category">
@@ -134,13 +134,13 @@ $hasCategory = isset($categoryData['id']) && $categoryData['id'] !== null;
                                     class="product-card__button<?= $inStock ? '' : ' is-disabled' ?>"
                                     data-add-to-cart
                                     data-product-id="<?= (int)($product['id'] ?? 0) ?>"
-                                    data-product-name="<?= htmlspecialchars($product['name'] ?? 'Product') ?>"
+                                    data-product-name="<?= htmlspecialchars($product['name'] ?? 'ÃœrÃ¼n') ?>"
                                     <?= $inStock ? '' : 'disabled' ?>
                                 >
                                     Sepete Ekle
                                 </button>
                             <?php else: ?>
-                                <a class="product-card__button product-card__button--ghost" href="/login.php">Giris Yap</a>
+                                <a class="product-card__button product-card__button--ghost" href="/login.php">GiriÅŸ Yap</a>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -151,9 +151,9 @@ $hasCategory = isset($categoryData['id']) && $categoryData['id'] !== null;
 <?php else: ?>
     <section class="section">
         <div class="empty-state">
-            <h3>Bu kategoride ürün bulunamadý.</h3>
-            <p>Yakýnda yeni ürünler eklenebilir, lütfen daha sonra tekrar ziyaret edin.</p>
-            <a class="btn btn-primary" href="/kategori/">Tüm kategorileri görüntüle</a>
+            <h3>Bu kategoride Ã¼rÃ¼n bulunamadÄ±.</h3>
+            <p>YakÄ±nda yeni Ã¼rÃ¼nler eklenebilir, lÃ¼tfen daha sonra tekrar ziyaret edin.</p>
+            <a class="btn btn-primary" href="<?= htmlspecialchars(Helpers::categoryUrl('')) ?>">TÃ¼m kategorileri gÃ¶rÃ¼ntÃ¼le</a>
         </div>
     </section>
 <?php endif; ?>

@@ -1,4 +1,5 @@
 <?php
+use App\Helpers;
 $canShop = !empty($isLoggedIn);
 $sliderData = isset($slider) && is_array($slider) ? $slider : array();
 $mainSlides = isset($sliderData['mainSlides']) && is_array($sliderData['mainSlides']) ? $sliderData['mainSlides'] : array();
@@ -182,10 +183,10 @@ $sliderCategories = isset($sliderData['categories']) && is_array($sliderData['ca
 <section class="section">
     <div class="section-header">
         <div>
-            <h2>Hot releases</h2>
-            <small>Popular picks from the community</small>
+            <h2>Gündemdeki Ürünler</h2>
+            <small>Topluluğun en çok tercih ettiği paketler</small>
         </div>
-        <a class="section-link" href="/catalog.php">View all</a>
+        <a class="section-link" href="<?= htmlspecialchars(Helpers::categoryUrl(''), ENT_QUOTES, 'UTF-8') ?>">Tümünü Gör</a>
     </div>
     <div class="section-carousel">
         <?php foreach ($featuredProducts ?? [] as $product): ?>
@@ -253,7 +254,11 @@ $sliderCategories = isset($sliderData['categories']) && is_array($sliderData['ca
                 <h2><?= htmlspecialchars($section['title']) ?></h2>
                 <small>Exclusive deals updated daily</small>
             </div>
-            <a class="section-link" href="/catalog.php#<?= htmlspecialchars($section['id']) ?>">View all</a>
+            <?php
+                $sectionPath = isset($section['id']) ? (string)$section['id'] : '';
+                $sectionUrl = $sectionPath !== '' ? Helpers::categoryUrl($sectionPath) : Helpers::categoryUrl('');
+            ?>
+            <a class="section-link" href="<?= htmlspecialchars($sectionUrl, ENT_QUOTES, 'UTF-8') ?>">Tümünü Gör</a>
         </div>
         <div class="section-carousel">
                         <?php foreach ($section['products'] as $product): ?>

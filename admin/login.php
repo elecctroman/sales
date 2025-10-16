@@ -3,14 +3,10 @@ require __DIR__ . '/../bootstrap.php';
 
 use App\Auth;
 use App\Helpers;
-use App\Lang;
-use App\Settings;
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
-
-Lang::boot();
 
 if (!empty($_SESSION['user']) && Auth::isAdminRole($_SESSION['user']['role'])) {
     Helpers::redirect('/admin/dashboard.php');
@@ -29,11 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = Auth::attempt($identifier, $password);
         if ($user && Auth::isAdminRole($user['role'])) {
             $_SESSION['user'] = $user;
-
-            $preferredLanguage = Settings::get('user_' . $user['id'] . '_preferred_language');
-            if ($preferredLanguage) {
-                Lang::setLocale($preferredLanguage);
-            }
 
             Helpers::redirect('/admin/dashboard.php');
         } else {

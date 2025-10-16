@@ -37,7 +37,7 @@ if (!$product) : ?>
             <span class="material-icons" aria-hidden="true">inventory_2</span>
             <h1>Urun bulunamadi</h1>
             <p>Aradiginiz urunu bulamadik. Kataloga geri donerek diger secenekleri inceleyebilirsiniz.</p>
-            <a class="btn btn-primary" href="/catalog.php">Kataloga don</a>
+            <a class="btn btn-primary" href="/kategori/">Kataloğa Dön</a>
         </div>
     </section>
     <?php return; ?>

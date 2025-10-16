@@ -15,4 +15,4 @@ define('DB_PASSWORD', 'j.5LpgvX90tfHe[6');
 define('TELEGRAM_BOT_TOKEN', '');
 define('TELEGRAM_CHAT_ID', '');
 
-define('DEFAULT_LANGUAGE', 'en');
+define('DEFAULT_LANGUAGE', 'tr');

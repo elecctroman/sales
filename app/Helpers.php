@@ -58,10 +58,10 @@ class Helpers
             $value = Settings::get('site_name');
             $value = $value !== null ? trim($value) : '';
         } catch (\Throwable $exception) {
-            return 'Customer Yonetim Sistemi';
+            return 'Dijital Satış Platformu';
         }
 
-        return $value !== '' ? $value : 'Customer Yonetim Sistemi';
+        return $value !== '' ? $value : 'Dijital Satış Platformu';
     }
 
     /**
@@ -73,10 +73,10 @@ class Helpers
             $value = Settings::get('site_tagline');
             $value = $value !== null ? trim($value) : '';
         } catch (\Throwable $exception) {
-            return 'Reseller automation platform';
+            return 'Dijital ürün satışlarınızı yönetin.';
         }
 
-        return $value !== '' ? $value : 'Reseller automation platform';
+        return $value !== '' ? $value : 'Dijital ürün satışlarınızı yönetin.';
     }
 
     /**
@@ -84,6 +84,13 @@ class Helpers
      */
     public static function seoDescription()
     {
+        if (isset($GLOBALS['pageMetaDescription']) && is_string($GLOBALS['pageMetaDescription'])) {
+            $override = trim($GLOBALS['pageMetaDescription']);
+            if ($override !== '') {
+                return $override;
+            }
+        }
+
         try {
             $value = Settings::get('seo_meta_description');
             $value = $value !== null ? trim($value) : '';
@@ -95,7 +102,7 @@ class Helpers
             return $value;
         }
 
-        return 'Manage reseller orders, balance, and WooCommerce synchronisation from a single dashboard.';
+        return 'Dijital ürün ve oyun kodu satışınızı tek panelden yönetin.';
     }
 
     /**
@@ -103,6 +110,13 @@ class Helpers
      */
     public static function seoKeywords()
     {
+        if (isset($GLOBALS['pageMetaKeywords']) && is_string($GLOBALS['pageMetaKeywords'])) {
+            $override = trim($GLOBALS['pageMetaKeywords']);
+            if ($override !== '') {
+                return $override;
+            }
+        }
+
         try {
             $value = Settings::get('seo_meta_keywords');
             $value = $value !== null ? trim($value) : '';
@@ -110,7 +124,7 @@ class Helpers
             $value = '';
         }
 
-        return $value !== '' ? $value : 'reseller panel, smm panel, automation';
+        return $value !== '' ? $value : 'dijital ürün, oyun kodu, satış platformu';
     }
 
     /**
@@ -224,11 +238,12 @@ class Helpers
     public static function sanitize($value)
     {
         if (is_string($value)) {
-            Lang::boot();
-            $value = Lang::line($value);
+            if (!mb_check_encoding($value, 'UTF-8')) {
+                $value = mb_convert_encoding($value, 'UTF-8', 'auto');
+            }
         }
 
-        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
     /**
@@ -238,8 +253,11 @@ class Helpers
      */
     public static function translate($text, $key = null)
     {
-        Lang::boot();
-        return Lang::line($text, $key);
+        if (!is_string($text)) {
+            return $key !== null ? (string)$key : '';
+        }
+
+        return $text;
     }
 
     /**
@@ -247,8 +265,7 @@ class Helpers
      */
     public static function activeCurrency()
     {
-        Lang::boot();
-        return Lang::locale() === 'tr' ? 'TRY' : 'USD';
+        return 'TRY';
     }
 
     /**
@@ -258,7 +275,6 @@ class Helpers
      */
     public static function formatCurrency($amount, $baseCurrency = 'USD')
     {
-        Lang::boot();
         $activeCurrency = self::activeCurrency();
 
         if ($activeCurrency !== $baseCurrency) {
@@ -323,7 +339,6 @@ class Helpers
      */
     public static function currencySymbol()
     {
-        Lang::boot();
         return Currency::symbol(self::activeCurrency());
     }
 
@@ -372,6 +387,17 @@ class Helpers
             return '';
         }
 
+        $map = array(
+            'Ç' => 'C', 'ç' => 'c',
+            'Ğ' => 'G', 'ğ' => 'g',
+            'İ' => 'I', 'I' => 'I', 'ı' => 'i',
+            'Ö' => 'O', 'ö' => 'o',
+            'Ş' => 'S', 'ş' => 's',
+            'Ü' => 'U', 'ü' => 'u',
+        );
+
+        $value = strtr($value, $map);
+
         if (function_exists('iconv')) {
             $transliterated = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
             if ($transliterated !== false && $transliterated !== '') {
@@ -379,8 +405,8 @@ class Helpers
             }
         }
 
-        $value = strtolower($value);
-        $value = preg_replace('/[^a-z0-9]+/i', $separator, $value);
+        $value = mb_strtolower($value, 'UTF-8');
+        $value = preg_replace('/[^a-z0-9]+/iu', $separator, $value);
         $value = trim($value, $separator);
 
         return $value;
@@ -481,7 +507,7 @@ class Helpers
      */
     public static function defaultProductDescription()
     {
-        return 'For more information about this service please contact our support team.';
+        return 'Detaylı bilgi için lütfen destek ekibimizle iletişime geçin.';
     }
 
     /**
@@ -741,14 +767,24 @@ class Helpers
             $path = (string)$category;
         }
 
-        $path = trim(str_replace('\\','/', $path), '/');
+        $path = trim(str_replace('\\', '/', $path), '/');
+        $segments = array();
+
         if ($path !== '') {
-            $path = strtolower($path);
+            foreach (explode('/', $path) as $segment) {
+                $segment = trim($segment);
+                if ($segment === '') {
+                    continue;
+                }
+
+                $segments[] = strtolower($segment);
+            }
         }
 
-        $urlPath = '/kategori/';
-        if ($path !== '') {
-            $urlPath .= $path . '/';
+        $urlPath = '/kategori';
+        if ($segments) {
+            $encoded = array_map('rawurlencode', $segments);
+            $urlPath .= '/' . implode('/', $encoded);
         }
 
         return $absolute ? self::absoluteUrl($urlPath) : $urlPath;

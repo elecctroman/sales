@@ -16,4 +16,4 @@ define('DB_PORT', 3306);
 define('TELEGRAM_BOT_TOKEN', '');
 define('TELEGRAM_CHAT_ID', '');
 
-define('DEFAULT_LANGUAGE', 'en');
+define('DEFAULT_LANGUAGE', 'tr');

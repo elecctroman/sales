@@ -472,7 +472,7 @@ include __DIR__ . '/templates/header.php';
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Link</label>
-                    <input type="text" class="form-control" name="categories[__INDEX__][link]" placeholder="/catalog.php#...">
+                    <input type="text" class="form-control" name="categories[__INDEX__][link]" placeholder="/kategori/...">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Görsel URL</label>

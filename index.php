@@ -443,6 +443,15 @@ $paymentSuccessContext = array(
     'remaining_balance' => null,
 );
 
+$categoryPageContext = array(
+    'category' => null,
+    'breadcrumbs' => array(),
+    'children' => array(),
+    'products' => array(),
+    'productCount' => 0,
+);
+$categoryNotFound = false;
+
 $defaultCategoryImage = '/theme/assets/images/site/KYQdPJDHaWihG3n7Sf3sHseGTRMT3xtmVGlDvNOj.webp';
 $defaultAccent = '#6366f1';
 
@@ -502,12 +511,27 @@ try {
     }
 
     $categoriesById = array();
+    $categoriesBySlug = array();
     $categoryStatement = $pdo->query('SELECT id, parent_id, name, icon, image, description FROM categories ORDER BY created_at ASC, name ASC');
     if ($categoryStatement instanceof \PDOStatement) {
         while ($row = $categoryStatement->fetch(PDO::FETCH_ASSOC)) {
             $row['id'] = (int)$row['id'];
             $row['parent_id'] = isset($row['parent_id']) ? (int)$row['parent_id'] : null;
-            $row['slug'] = Helpers::slugify($row['name']);
+            $slug = Helpers::slugify($row['name']);
+            if ($slug === '') {
+                $slug = 'kategori-' . $row['id'];
+            }
+
+            $baseSlug = $slug;
+            $suffix = 2;
+            while (isset($categoriesBySlug[$slug])) {
+                $slug = $baseSlug . '-' . $suffix;
+                $suffix++;
+            }
+
+            $row['slug'] = $slug;
+            $row['path'] = $slug;
+            $categoriesBySlug[$slug] = $row['id'];
             $categoriesById[$row['id']] = $row;
         }
     }
@@ -527,6 +551,44 @@ try {
         });
     }
     unset($childList);
+
+    $categoryPaths = array();
+    $resolveCategoryPath = function (int $categoryId) use (&$categoriesById, &$categoryPaths, &$resolveCategoryPath) {
+        if (isset($categoryPaths[$categoryId])) {
+            return $categoryPaths[$categoryId];
+        }
+
+        if (!isset($categoriesById[$categoryId])) {
+            return '';
+        }
+
+        $category = $categoriesById[$categoryId];
+        $slug = isset($category['slug']) && $category['slug'] !== '' ? (string)$category['slug'] : ('kategori-' . $categoryId);
+        $parentId = isset($category['parent_id']) ? (int)$category['parent_id'] : 0;
+        $path = $slug;
+
+        if ($parentId && isset($categoriesById[$parentId])) {
+            $parentPath = $resolveCategoryPath($parentId);
+            $path = $parentPath !== '' ? $parentPath . '/' . $slug : $slug;
+        }
+
+        $categoriesById[$categoryId]['path'] = $path;
+        $categoryPaths[$categoryId] = $path;
+
+        return $path;
+    };
+
+    foreach (array_keys($categoriesById) as $categoryId) {
+        $resolveCategoryPath((int)$categoryId);
+    }
+
+    $categoriesByPath = array();
+    foreach ($categoriesById as $categoryId => $category) {
+        $path = isset($category['path']) ? (string)$category['path'] : '';
+        if ($path !== '') {
+            $categoriesByPath[$path] = (int)$categoryId;
+        }
+    }
 
     if ($script === 'product.php') {
         $requestedProductSlug = isset($_GET['slug']) ? trim((string)$_GET['slug']) : '';
@@ -660,8 +722,8 @@ try {
             }
 
             $breadcrumbs = array(
-                array('label' => 'Home', 'url' => '/'),
-                array('label' => 'Catalog', 'url' => '/catalog.php'),
+                array('label' => 'Anasayfa', 'url' => '/'),
+                array('label' => 'Kategoriler', 'url' => Helpers::categoryUrl('')),
             );
 
             $categoryTrail = array();
@@ -671,7 +733,7 @@ try {
                 $categoryNode = $categoriesById[$trailCursor];
                 array_unshift($categoryTrail, array(
                     'label' => $categoryNode['name'],
-                    'url' => '/catalog.php?category=' . (int)$categoryNode['id'],
+                    'url' => Helpers::categoryUrl(isset($categoryNode['path']) ? $categoryNode['path'] : $categoryNode['slug']),
                 ));
                 $trailCursor = isset($categoryNode['parent_id']) ? (int)$categoryNode['parent_id'] : 0;
                 $guard++;
@@ -973,6 +1035,29 @@ try {
     $sections = array();
     $usedCategoryIds = array();
 
+    $categoryProductCounts = array();
+    $computeCategoryProductCount = function (int $categoryId) use (&$computeCategoryProductCount, &$categoryChildren, &$productsByCategory, &$categoryProductCounts) {
+        if (isset($categoryProductCounts[$categoryId])) {
+            return $categoryProductCounts[$categoryId];
+        }
+
+        $count = isset($productsByCategory[$categoryId]) ? count($productsByCategory[$categoryId]) : 0;
+
+        if (!empty($categoryChildren[$categoryId])) {
+            foreach ($categoryChildren[$categoryId] as $childCategory) {
+                $count += $computeCategoryProductCount((int)$childCategory['id']);
+            }
+        }
+
+        $categoryProductCounts[$categoryId] = $count;
+
+        return $count;
+    };
+
+    foreach (array_keys($categoriesById) as $categoryId) {
+        $computeCategoryProductCount((int)$categoryId);
+    }
+
     if ($sectionsConfig) {
         foreach ($sectionsConfig as $config) {
             if (!is_array($config)) {
@@ -1151,6 +1236,8 @@ try {
                     'id' => (int)$child['id'],
                     'name' => $child['name'],
                     'slug' => $childSlug,
+                    'path' => isset($categoriesById[$child['id']]['path']) ? $categoriesById[$child['id']]['path'] : $childSlug,
+                    'url' => Helpers::categoryUrl(isset($categoriesById[$child['id']]['path']) ? $categoriesById[$child['id']]['path'] : $childSlug),
                 );
             }
         }
@@ -1161,20 +1248,177 @@ try {
             'slug' => $presentation['slug'],
             'icon' => $category['icon'] ?? $presentation['icon'],
             'image' => !empty($category['image']) ? $category['image'] : $presentation['image'],
+            'path' => isset($categoriesById[$category['id']]['path']) ? $categoriesById[$category['id']]['path'] : $presentation['slug'],
+            'url' => Helpers::categoryUrl(isset($categoriesById[$category['id']]['path']) ? $categoriesById[$category['id']]['path'] : $presentation['slug']),
             'children' => $children,
         );
     }
 
     if (!$navCategories) {
         foreach ($defaultHomeSections as $section) {
+            $fallbackSlug = isset($section['id']) ? $section['id'] : Helpers::slugify($section['title']);
             $navCategories[] = array(
                 'id' => isset($section['id']) ? $section['id'] : 0,
                 'name' => $section['title'],
-                'slug' => isset($section['id']) ? $section['id'] : Helpers::slugify($section['title']),
+                'slug' => $fallbackSlug,
                 'icon' => '',
                 'image' => $section['products'][0]['image'] ?? $defaultCategoryImage,
+                'path' => $fallbackSlug,
+                'url' => Helpers::categoryUrl($fallbackSlug),
                 'children' => array(),
             );
+        }
+    }
+
+    if ($script === 'kategori.php') {
+        $requestedPath = isset($_GET['slug']) ? trim((string)$_GET['slug']) : '';
+        $requestedPath = trim($requestedPath, '/');
+
+        if ($requestedPath === '') {
+            $children = array();
+            $rootCategories = isset($categoryChildren[0]) ? $categoryChildren[0] : array();
+            foreach ($rootCategories as $child) {
+                $childId = (int)$child['id'];
+                $childPath = isset($categoriesById[$childId]['path']) ? $categoriesById[$childId]['path'] : $child['slug'];
+                $children[] = array(
+                    'id' => $childId,
+                    'name' => $child['name'],
+                    'path' => $childPath,
+                    'url' => Helpers::categoryUrl($childPath),
+                    'productCount' => isset($categoryProductCounts[$childId]) ? $categoryProductCounts[$childId] : 0,
+                );
+            }
+
+            $categoryPageContext['category'] = array(
+                'id' => null,
+                'name' => 'Kategoriler',
+                'description' => 'Tüm ürün kategorilerini keşfedin.',
+                'accent' => $defaultAccent,
+                'image' => $defaultCategoryImage,
+                'path' => '',
+                'url' => Helpers::categoryUrl(''),
+            );
+            $categoryPageContext['children'] = $children;
+            $categoryPageContext['products'] = array();
+            $categoryPageContext['productCount'] = array_sum(array_map(function ($entry) {
+                return isset($entry['productCount']) ? (int)$entry['productCount'] : 0;
+            }, $children));
+            $categoryPageContext['breadcrumbs'] = array(
+                array('label' => 'Anasayfa', 'url' => '/'),
+                array('label' => 'Kategoriler', 'url' => null),
+            );
+            Helpers::setPageTitle('Kategoriler');
+            Helpers::setCanonicalUrl(Helpers::categoryUrl('', true));
+        } else {
+            if (!isset($categoriesByPath[$requestedPath])) {
+                $categoryNotFound = true;
+                http_response_code(404);
+            } else {
+                $categoryId = (int)$categoriesByPath[$requestedPath];
+                $category = $categoriesById[$categoryId];
+                $presentation = resolveCategoryPresentation($category, $categoryStyleOverrides, $defaultCategoryStyles, $defaultAccent, $defaultCategoryImage);
+                $categoryName = $category['name'];
+                $categoryDescription = isset($category['description']) && trim((string)$category['description']) !== ''
+                    ? trim((string)$category['description'])
+                    : 'Kategori içerisindeki ürünleri inceleyin.';
+
+                Helpers::setPageTitle($categoryName);
+                $GLOBALS['pageMetaDescription'] = $categoryDescription;
+                Helpers::setCanonicalUrl(Helpers::categoryUrl($category['path'], true));
+
+                $breadcrumbs = array(
+                    array('label' => 'Anasayfa', 'url' => '/'),
+                    array('label' => 'Kategoriler', 'url' => Helpers::categoryUrl('')),
+                );
+
+                $trail = array();
+                $ancestorId = isset($category['parent_id']) ? (int)$category['parent_id'] : 0;
+                $guard = 0;
+                while ($ancestorId && isset($categoriesById[$ancestorId]) && $guard < 10) {
+                    $ancestor = $categoriesById[$ancestorId];
+                    $trail[] = array(
+                        'label' => $ancestor['name'],
+                        'url' => Helpers::categoryUrl($ancestor['path']),
+                    );
+                    $ancestorId = isset($ancestor['parent_id']) ? (int)$ancestor['parent_id'] : 0;
+                    $guard++;
+                }
+
+                if ($trail) {
+                    $trail = array_reverse($trail);
+                    $breadcrumbs = array_merge($breadcrumbs, $trail);
+                }
+
+                $breadcrumbs[] = array('label' => $categoryName, 'url' => null);
+
+                $categoryPageContext['category'] = array(
+                    'id' => $categoryId,
+                    'name' => $categoryName,
+                    'description' => $categoryDescription,
+                    'accent' => $presentation['accent'],
+                    'image' => $presentation['image'],
+                    'path' => $category['path'],
+                    'url' => Helpers::categoryUrl($category['path']),
+                );
+                $categoryPageContext['breadcrumbs'] = $breadcrumbs;
+
+                $childEntries = array();
+                if (isset($categoryChildren[$categoryId])) {
+                    foreach ($categoryChildren[$categoryId] as $child) {
+                        $childId = (int)$child['id'];
+                        $childPath = isset($categoriesById[$childId]['path']) ? $categoriesById[$childId]['path'] : $child['slug'];
+                        $childEntries[] = array(
+                            'id' => $childId,
+                            'name' => $child['name'],
+                            'path' => $childPath,
+                            'url' => Helpers::categoryUrl($childPath),
+                            'productCount' => isset($categoryProductCounts[$childId]) ? $categoryProductCounts[$childId] : 0,
+                        );
+                    }
+                }
+                $categoryPageContext['children'] = $childEntries;
+
+                $collectedProducts = array();
+                $stack = array($categoryId);
+                $visited = array($categoryId => true);
+
+                while ($stack) {
+                    $current = array_pop($stack);
+                    if (isset($productsByCategory[$current])) {
+                        foreach ($productsByCategory[$current] as $product) {
+                            $collectedProducts[] = $product;
+                        }
+                    }
+
+                    if (isset($categoryChildren[$current])) {
+                        foreach ($categoryChildren[$current] as $child) {
+                            $childId = (int)$child['id'];
+                            if (!isset($visited[$childId])) {
+                                $visited[$childId] = true;
+                                $stack[] = $childId;
+                            }
+                        }
+                    }
+                }
+
+                $productCards = array();
+                foreach ($collectedProducts as $product) {
+                    $productCategoryId = isset($product['category_id']) ? (int)$product['category_id'] : null;
+                    $productCategory = $productCategoryId !== null && isset($categoriesById[$productCategoryId]) ? $categoriesById[$productCategoryId] : null;
+                    $productPresentation = resolveCategoryPresentation($productCategory, $categoryStyleOverrides, $defaultCategoryStyles, $defaultAccent, $defaultCategoryImage);
+                    $card = mapProductCard($product, $productPresentation['image'], $productCategoryId, $productPresentation['slug']);
+
+                    if ($productCategoryId !== null && isset($categoriesById[$productCategoryId]['path'])) {
+                        $card['category_path'] = $categoriesById[$productCategoryId]['path'];
+                        $card['category_url'] = Helpers::categoryUrl($categoriesById[$productCategoryId]['path']);
+                    }
+
+                    $productCards[] = $card;
+                }
+
+                $categoryPageContext['products'] = $productCards;
+                $categoryPageContext['productCount'] = isset($categoryProductCounts[$categoryId]) ? $categoryProductCounts[$categoryId] : count($productCards);
+            }
         }
     }
 } catch (\Throwable $exception) {
@@ -1542,11 +1786,27 @@ switch ($script) {
         exit;
 
     case 'catalog.php':
-        theme_render('catalog', array(
-            'pageTitle' => 'Catalog',
-            'products' => $catalogProducts,
-            'isLoggedIn' => $isLoggedIn,
-        ));
+        Helpers::redirect(Helpers::categoryUrl(''));
+        exit;
+
+    case 'kategori.php':
+        if ($categoryNotFound) {
+            http_response_code(404);
+            theme_render('404', array(
+                'pageTitle' => 'Kategori Bulunamadı',
+                'isLoggedIn' => $isLoggedIn,
+            ));
+        } else {
+            $categoryTitle = isset($categoryPageContext['category']['name']) && $categoryPageContext['category']['name'] !== ''
+                ? $categoryPageContext['category']['name']
+                : 'Kategoriler';
+            theme_render('category', array(
+                'pageTitle' => $categoryTitle,
+                'isLoggedIn' => $isLoggedIn,
+                'categoryPage' => $categoryPageContext,
+                'user' => isset($_SESSION['user']) ? $_SESSION['user'] : null,
+            ));
+        }
         exit;
 
     case 'blog.php':
