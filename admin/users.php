@@ -67,101 +67,148 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 sprintf('Yeni kullanÄ±cÄ±: %s (%s)', $email, $role)
             );
         }
-    } elseif ($action === 'balance') {
+    } elseif ($action === 'update') {
         $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
-        $amount = isset($_POST['amount']) ? (float)$_POST['amount'] : 0;
-        $type = isset($_POST['type']) ? $_POST['type'] : 'credit';
-        $description = isset($_POST['description']) ? trim($_POST['description']) : '';
+        $name = isset($_POST['name']) ? trim((string)$_POST['name']) : '';
+        $email = isset($_POST['email']) ? trim((string)$_POST['email']) : '';
+        $status = isset($_POST['status']) ? (string)$_POST['status'] : 'active';
+        $newRole = isset($_POST['role']) ? (string)$_POST['role'] : 'customer';
+        $password = isset($_POST['password']) ? (string)$_POST['password'] : '';
+        $balanceAmount = isset($_POST['balance_amount']) ? (float)$_POST['balance_amount'] : 0.0;
+        $balanceDirection = isset($_POST['balance_direction']) && $_POST['balance_direction'] === 'debit' ? 'debit' : 'credit';
+        $balanceNote = isset($_POST['balance_note']) ? trim((string)$_POST['balance_note']) : '';
 
-        $user = Auth::findUser($userId);
-        if (!$user) {
-            $errors[] = 'Customer not found.';
-        } elseif ($amount <= 0) {
-            $errors[] = 'Amount must be greater than zero.';
-        } else {
-            $pdo->prepare('INSERT INTO balance_transactions (user_id, amount, type, description, created_at) VALUES (:user_id, :amount, :type, :description, NOW())')->execute([
-                'user_id' => $userId,
-                'amount' => $amount,
-                'type' => $type,
-                'description' => $description ?: 'Balance adjustment',
-            ]);
+        $target = Auth::findUser($userId);
+        if (!$target) {
+            $errors[] = 'User not found.';
+        }
 
-            if ($type === 'credit') {
-                $pdo->prepare('UPDATE users SET balance = balance + :amount WHERE id = :id')->execute([
-                    'amount' => $amount,
-                    'id' => $userId,
-                ]);
-            } else {
-                $pdo->prepare('UPDATE users SET balance = GREATEST(balance - :amount, 0) WHERE id = :id')->execute([
-                    'amount' => $amount,
-                    'id' => $userId,
-                ]);
+        if (!$name) {
+            $errors[] = 'Name is required.';
+        }
+
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'A valid email address is required.';
+        }
+
+        if (!in_array($status, array('active', 'inactive'), true)) {
+            $errors[] = 'Invalid status selected.';
+        }
+
+        $allRoles = Auth::roles();
+        if (!in_array($newRole, $allRoles, true)) {
+            $errors[] = 'Invalid role selected.';
+        }
+
+        if ($target) {
+            if ($target['role'] === 'super_admin' && $currentUser['role'] !== 'super_admin') {
+                $errors[] = 'Only super administrators can update another super administrator.';
             }
 
-            $success = 'Balance updated successfully.';
-
-            AuditLog::record(
-                $currentUser['id'],
-                'user.balance_adjust',
-                'user',
-                $userId,
-                sprintf('Balance %s: %0.2f (%s)', $type, $amount, $description ?: 'Balance adjustment')
-            );
+            if ($newRole !== $target['role'] && !in_array($newRole, $assignableRoles, true)) {
+                $errors[] = 'You are not allowed to assign this role.';
+            }
         }
-    } elseif ($action === 'status') {
-        $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
-        $status = isset($_POST['status']) ? $_POST['status'] : 'active';
 
-        if (!in_array($status, ['active', 'inactive'], true)) {
-            $errors[] = 'Invalid status selected.';
-        } else {
-            $pdo->prepare('UPDATE users SET status = :status WHERE id = :id')->execute([
-                'status' => $status,
-                'id' => $userId,
-            ]);
-            $success = 'Customer status updated.';
-
-            AuditLog::record(
-                $currentUser['id'],
-                'user.status_change',
-                'user',
-                $userId,
-                sprintf('Status changed to %s', $status)
-            );
+        if ($password !== '' && strlen($password) < 6) {
+            $errors[] = 'New password must be at least 6 characters.';
         }
-    } elseif ($action === 'role') {
-        $userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
-        $newrole = isset($_POST['role']) ? $_POST['role'] : '';
 
-        if (!in_array($newrole, Auth::roles(), true)) {
-            $errors[] = 'Invalid role selected.';
-        } elseif (!in_array($newrole, $assignableRoles, true)) {
-            $errors[] = 'You are not allowed to assign this role.';
-        } else {
-            $target = Auth::findUser($userId);
-            if (!$target) {
-                $errors[] = 'User not found.';
-            } elseif ($target['role'] === 'super_admin' && $currentUser['role'] !== 'super_admin') {
-                $errors[] = 'Only super administrators can update another super administrator.';
-            } else {
-                $pdo->prepare('UPDATE users SET role = :role WHERE id = :id')->execute([
-                    'role' => $newrole,
+        if ($target) {
+            $emailCheck = $pdo->prepare('SELECT COUNT(*) FROM users WHERE email = :email AND id != :id');
+            $emailCheck->execute(array('email' => $email, 'id' => $userId));
+            if ((int)$emailCheck->fetchColumn() > 0) {
+                $errors[] = 'This email is already in use by another account.';
+            }
+        }
+
+        $balanceAmount = $balanceAmount > 0 ? $balanceAmount : 0.0;
+
+        if (!$errors && $target) {
+            $changes = array();
+
+            try {
+                $pdo->beginTransaction();
+
+                $pdo->prepare('UPDATE users SET name = :name, email = :email, status = :status, role = :role WHERE id = :id')->execute(array(
+                    'name' => $name,
+                    'email' => $email,
+                    'status' => $status,
+                    'role' => $newRole,
                     'id' => $userId,
-                ]);
+                ));
 
-                if ($userId === $currentUser['id']) {
-                    $_SESSION['user']['role'] = $newrole;
+                if ($target['name'] !== $name) {
+                    $changes[] = 'ad güncellendi';
+                }
+                if ($target['email'] !== $email) {
+                    $changes[] = 'email güncellendi';
+                }
+                if ($target['status'] !== $status) {
+                    $changes[] = 'durum ' . $status;
+                }
+                if ($target['role'] !== $newRole) {
+                    $changes[] = 'rol ' . $newRole;
                 }
 
-                $success = 'User role updated.';
+                if ($password !== '') {
+                    $pdo->prepare('UPDATE users SET password_hash = :hash WHERE id = :id')->execute(array(
+                        'hash' => password_hash($password, PASSWORD_BCRYPT),
+                        'id' => $userId,
+                    ));
+                    $changes[] = 'şifre sıfırlandı';
+                }
+
+                if ($balanceAmount > 0) {
+                    $pdo->prepare('INSERT INTO balance_transactions (user_id, amount, type, description, created_at) VALUES (:user_id, :amount, :type, :description, NOW())')->execute(array(
+                        'user_id' => $userId,
+                        'amount' => $balanceAmount,
+                        'type' => $balanceDirection,
+                        'description' => $balanceNote !== '' ? $balanceNote : 'Manual adjustment',
+                    ));
+
+                    if ($balanceDirection === 'credit') {
+                        $pdo->prepare('UPDATE users SET balance = balance + :amount WHERE id = :id')->execute(array(
+                            'amount' => $balanceAmount,
+                            'id' => $userId,
+                        ));
+                        $changes[] = sprintf('bakiye +%0.2f', $balanceAmount);
+                    } else {
+                        $pdo->prepare('UPDATE users SET balance = GREATEST(balance - :amount, 0) WHERE id = :id')->execute(array(
+                            'amount' => $balanceAmount,
+                            'id' => $userId,
+                        ));
+                        $changes[] = sprintf('bakiye -%0.2f', $balanceAmount);
+                    }
+                }
+
+                $pdo->commit();
+
+                if ($userId === $currentUser['id']) {
+                    $_SESSION['user']['name'] = $name;
+                    $_SESSION['user']['email'] = $email;
+                    $_SESSION['user']['status'] = $status;
+                    $_SESSION['user']['role'] = $newRole;
+                }
+
+                $success = 'Kullanıcı başarıyla güncellendi.';
+
+                if (!$changes) {
+                    $changes[] = 'profil güncellendi';
+                }
 
                 AuditLog::record(
                     $currentUser['id'],
-                    'user.role_change',
+                    'user.update',
                     'user',
                     $userId,
-                    sprintf('role changed to %s', $newrole)
+                    implode(', ', $changes)
                 );
+            } catch (\Throwable $exception) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                $errors[] = 'Kullanıcı güncellenemedi: ' . $exception->getMessage();
             }
         }
     }
@@ -271,10 +318,49 @@ include __DIR__ . '/templates/header.php';
                         </thead>
                         <tbody>
                         <?php foreach ($users as $user): ?>
+                            <?php
+                                $roleChoices = array();
+                                foreach (Auth::roles() as $roleOption) {
+                                    if ($roleOption === $user['role'] || in_array($roleOption, $assignableRoles, true)) {
+                                        $roleChoices[] = $roleOption;
+                                    }
+                                }
+                                if (!in_array($user['role'], $roleChoices, true)) {
+                                    $roleChoices[] = $user['role'];
+                                }
+                                $roleChoices = array_values(array_unique($roleChoices));
+                                $createdAt = date('d.m.Y H:i', strtotime($user['created_at']));
+                                $updatedAt = !empty($user['updated_at']) ? date('d.m.Y H:i', strtotime($user['updated_at'])) : '-';
+                                $rolePayload = array();
+                                foreach ($roleChoices as $roleOption) {
+                                    $rolePayload[] = array(
+                                        'value' => $roleOption,
+                                        'label' => Auth::roleLabel($roleOption),
+                                    );
+                                }
+                                $modalPayload = array(
+                                    'id' => (int)$user['id'],
+                                    'name' => (string)$user['name'],
+                                    'email' => (string)$user['email'],
+                                    'status' => (string)$user['status'],
+                                    'status_label' => $user['status'] === 'active' ? 'Aktif' : 'Pasif',
+                                    'role' => (string)$user['role'],
+                                    'role_label' => Auth::roleLabel($user['role']),
+                                    'roles' => $rolePayload,
+                                    'balance_formatted' => Helpers::formatCurrency((float)$user['balance']),
+                                    'created_at' => $createdAt,
+                                    'updated_at' => $updatedAt,
+                                );
+                                $modalJson = json_encode($modalPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                                if ($modalJson === false) {
+                                    $modalJson = '{}';
+                                }
+                                $modalData = htmlspecialchars($modalJson, ENT_QUOTES, 'UTF-8');
+                            ?>
                             <tr>
                                 <td>
                                     <div class="fw-semibold"><?= Helpers::sanitize($user['name']) ?></div>
-                                    <div class="text-muted small"><?= Helpers::sanitize(Auth::roleLabel($user['role'])) ?></div>
+                                    <div class="text-muted small">ID: <?= (int)$user['id'] ?></div>
                                 </td>
                                 <td><?= Helpers::sanitize($user['email']) ?></td>
                                 <td><?= Helpers::sanitize(Auth::roleLabel($user['role'])) ?></td>
@@ -284,110 +370,100 @@ include __DIR__ . '/templates/header.php';
                                     </span>
                                 </td>
                                 <td><?= Helpers::sanitize(Helpers::formatCurrency((float)$user['balance'])) ?></td>
-                                <td><?= Helpers::sanitize(date('d.m.Y H:i', strtotime($user['created_at']))) ?></td>
+                                <td><?= Helpers::sanitize($createdAt) ?></td>
                                 <td class="text-end">
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#balanceModal<?= (int)$user['id'] ?>">Balance</button>
-                                        <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#statusModal<?= (int)$user['id'] ?>">Status</button>
-                                        <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#roleModal<?= (int)$user['id'] ?>">Role</button>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-primary btn-sm edit-user-trigger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editUserModal"
+                                        data-user="<?= $modalData ?>"
+                                    >Düzenle</button>
                                 </td>
                             </tr>
-                            <div class="modal fade" id="balanceModal<?= (int)$user['id'] ?>" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content">
-                                        <form method="post">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Adjust balance</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <input type="hidden" name="action" value="balance">
-                                                <input type="hidden" name="user_id" value="<?= (int)$user['id'] ?>">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Transaction type</label>
-                                                    <select name="type" class="form-select">
-                                                        <option value="credit">Credit</option>
-                                                        <option value="debit">Debit</option>
-                                                    </select>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label">Amount</label>
-                                                    <input type="number" step="0.01" name="amount" class="form-control" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label">Description</label>
-                                                    <textarea name="description" class="form-control" rows="2" placeholder="Optional"></textarea>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary">Save</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal fade" id="statusModal<?= (int)$user['id'] ?>" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content">
-                                        <form method="post">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Update status</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <input type="hidden" name="action" value="status">
-                                                <input type="hidden" name="user_id" value="<?= (int)$user['id'] ?>">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Status</label>
-                                                    <select name="status" class="form-select">
-                                                        <option value="active" <?= $user['status'] === 'active' ? 'selected' : '' ?>>Active</option>
-                                                        <option value="inactive" <?= $user['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary">Update</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal fade" id="roleModal<?= (int)$user['id'] ?>" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content">
-                                        <form method="post">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Update role</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <input type="hidden" name="action" value="role">
-                                                <input type="hidden" name="user_id" value="<?= (int)$user['id'] ?>">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Role</label>
-                                                    <select name="role" class="form-select">
-                                                        <?php foreach ($assignableRoles as $roleOption): ?>
-                                                            <option value="<?= htmlspecialchars($roleOption, ENT_QUOTES, 'UTF-8') ?>" <?= $user['role'] === $roleOption ? 'selected' : '' ?>><?= Helpers::sanitize(Auth::roleLabel($roleOption)) ?></option>
-                                                        <?php endforeach; ?>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary">Save</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
                         <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true" aria-labelledby="editUserModalLabel">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <form method="post" id="editUserForm">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="editUserModalLabel">Kullanıcıyı Düzenle</h5>
+                        <span class="d-block text-muted small" id="editUserMeta"></span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="user_id" id="editUserId" value="">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="editUserName">Ad Soyad</label>
+                            <input type="text" name="name" id="editUserName" class="form-control" value="" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="editUserEmail">E-posta</label>
+                            <input type="email" name="email" id="editUserEmail" class="form-control" value="" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="editUserStatus">Durum</label>
+                            <select name="status" id="editUserStatus" class="form-select">
+                                <option value="active">Aktif</option>
+                                <option value="inactive">Pasif</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="editUserRole">Rol</label>
+                            <select name="role" id="editUserRole" class="form-select" disabled>
+                                <option value="">Rol yükleniyor...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="editUserPassword">Yeni Şifre</label>
+                            <input type="password" name="password" id="editUserPassword" class="form-control" placeholder="Opsiyonel">
+                            <small class="text-muted">Boş bırakırsanız değişmez.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="editUserCurrentBalance">Aktif Bakiye</label>
+                            <input type="text" class="form-control" id="editUserCurrentBalance" value="" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="editUserBalanceDirection">Bakiye İşlemi</label>
+                            <select name="balance_direction" id="editUserBalanceDirection" class="form-select">
+                                <option value="credit">Bakiye Ekle</option>
+                                <option value="debit">Bakiye Çıkar</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="editUserBalanceAmount">Tutar</label>
+                            <input type="number" step="0.01" name="balance_amount" id="editUserBalanceAmount" class="form-control" value="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="editUserBalanceNote">Not</label>
+                            <input type="text" name="balance_note" id="editUserBalanceNote" class="form-control" placeholder="Opsiyonel">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="editUserCreatedAt">Oluşturma Tarihi</label>
+                            <input type="text" class="form-control" id="editUserCreatedAt" value="" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="editUserUpdatedAt">Son Güncelleme</label>
+                            <input type="text" class="form-control" id="editUserUpdatedAt" value="" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="submit" class="btn btn-primary">Değişiklikleri Kaydet</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

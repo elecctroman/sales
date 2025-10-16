@@ -157,6 +157,13 @@ if ($user) {
                         'roles' => array('super_admin', 'admin', 'content'),
                     ),
                     array(
+                        'label' => 'Kuponlar',
+                        'href' => '/admin/coupons.php',
+                        'pattern' => '/admin/coupons.php',
+                        'icon' => 'bi-ticket',
+                        'roles' => array('super_admin', 'admin', 'finance'),
+                    ),
+                    array(
                         'label' => 'Paketler',
                         'href' => '/admin/packages.php',
                         'pattern' => '/admin/packages.php',
@@ -202,6 +209,25 @@ if ($user) {
                                 'roles' => array('super_admin', 'admin', 'content'),
                             ),
                         ),
+                    ),
+                ),
+            ),
+            array(
+                'heading' => 'Icerik',
+                'items' => array(
+                    array(
+                        'label' => 'Blog Yazilari',
+                        'href' => '/admin/blog-posts.php',
+                        'pattern' => '/admin/blog-posts.php',
+                        'icon' => 'bi-journal-richtext',
+                        'roles' => array('super_admin', 'admin', 'content'),
+                    ),
+                    array(
+                        'label' => 'Sabit Sayfalar',
+                        'href' => '/admin/pages.php',
+                        'pattern' => '/admin/pages.php',
+                        'icon' => 'bi-file-earmark-text',
+                        'roles' => array('super_admin', 'admin', 'content'),
                     ),
                 ),
             ),
