@@ -203,6 +203,6 @@ $methodLabel = isset($methodLabels[$method]) ? $methodLabels[$method] : 'Odeme';
 
     <footer class="payment-success__footer">
         <a class="btn btn-secondary" href="/kategori/">Alışverişe Devam Et</a>
-        <a class="btn btn-ghost" href="/account.php">Siparişlerimi Görüntüle</a>
+        <a class="btn btn-ghost" href="/account">Siparişlerimi Görüntüle</a>
     </footer>
 </section>

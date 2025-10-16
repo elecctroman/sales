@@ -3389,3 +3389,76 @@ a {
 
 
 
+
+.static-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+}
+
+.static-page__header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.static-page__header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.static-page__body {
+    color: #374151;
+    line-height: 1.7;
+}
+
+.static-page__body p {
+    margin-bottom: 1em;
+}
+
+.static-page__body a {
+    color: #4f46e5;
+    text-decoration: underline;
+}
+
+.static-page__body ul,
+.static-page__body ol {
+    margin: 0 0 1.5rem 1.5rem;
+}
+
+.static-page__body li {
+    margin-bottom: 0.5rem;
+}
+
+.static-page__body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+.static-page__body th,
+.static-page__body td {
+    border: 1px solid #e5e7eb;
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.static-page__body img {
+    max-width: 100%;
+    height: auto;
+}
+
+.static-page__empty {
+    text-align: center;
+    color: #6b7280;
+}
+
+@media (max-width: 768px) {
+    .static-page {
+        padding: 1.5rem 1rem 2.5rem;
+    }
+
+    .static-page__header h1 {
+        font-size: 1.75rem;
+    }
+}
