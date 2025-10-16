@@ -91,6 +91,16 @@ try {
 
 App\Lang::boot();
 
+try {
+    App\MenuRepository::bootstrap();
+    App\MenuRepository::syncCategoryMenu();
+    $GLOBALS['theme_nav_categories'] = App\MenuRepository::buildHeaderMenu();
+    $GLOBALS['theme_footer_menus'] = App\MenuRepository::buildFooterMenu();
+    $GLOBALS['admin_menu_sections'] = App\MenuRepository::buildAdminMenu(isset($_SESSION['user']) ? $_SESSION['user'] : null);
+} catch (\Throwable $menuException) {
+    // Menu services are optional for bootstrap; ignore failures to keep the application responsive.
+}
+
 if (!empty($_SESSION['user'])) {
     $freshUser = App\Auth::findUser((int)$_SESSION['user']['id']);
     if ($freshUser) {

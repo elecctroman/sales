@@ -3,6 +3,8 @@
 
     const DATA_URL = '/assets/admin/data/category-icons.json';
     const ICON_INPUT_SELECTOR = '[data-icon-picker]';
+    const ICON_VALUE_PATTERN = /^(iconify:[A-Za-z0-9:_-]+|[A-Za-z0-9:_-]+(?:\s+[A-Za-z0-9:_-]+)*)$/i;
+
     const STATE = {
         icons: null,
         listItems: [],
@@ -268,6 +270,9 @@
         input.parentNode.insertBefore(this.wrapper, input);
         this.wrapper.appendChild(input);
         this.build();
+        if (this.manualInput) {
+            this.manualInput.value = this.value;
+        }
         this.updatePreview();
     }
 
@@ -353,8 +358,27 @@
     };
 
     IconPicker.prototype.setValue = function (newValue, label) {
-        this.value = (newValue || '').trim();
+        const normalized = (newValue || '').trim().replace(/\s+/g, ' ');
+
+        if (normalized && !ICON_VALUE_PATTERN.test(normalized)) {
+            this.wrapper.classList.add('icon-picker--invalid');
+            if (this.manualInput) {
+                this.manualInput.classList.add('is-invalid');
+                this.manualInput.setCustomValidity('Geçersiz ikon değeri');
+            }
+            return;
+        }
+
+        this.wrapper.classList.remove('icon-picker--invalid');
+        this.value = normalized;
         this.input.value = this.value;
+
+        if (this.manualInput) {
+            this.manualInput.classList.remove('is-invalid');
+            this.manualInput.setCustomValidity('');
+            this.manualInput.value = this.value;
+        }
+
         this.updatePreview(typeof label === 'string' ? label : null);
     };
 

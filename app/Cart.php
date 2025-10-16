@@ -2,6 +2,8 @@
 
 namespace App;
 
+use Throwable;
+
 class Cart
 {
     private const SESSION_KEY = 'cart_items';
@@ -55,10 +57,21 @@ class Cart
     {
         $items = self::getItems();
         $items = self::recalculateLineTotals($items);
-        $totals = self::calculateTotals($items);
+        $itemsList = array_values($items);
+        $totals = self::calculateTotals($itemsList);
+
+        $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+
+        try {
+            $couponContext = CouponService::recalculate($itemsList, $totals, $userId, false);
+            $totals = $couponContext['totals'];
+        } catch (Throwable $couponException) {
+            self::logEvent('coupon_evaluation_error', array('error' => $couponException->getMessage()));
+            CouponService::clear();
+        }
 
         return array(
-            'items' => array_values($items),
+            'items' => $itemsList,
             'totals' => $totals,
         );
     }
@@ -157,6 +170,7 @@ class Cart
     {
         self::setItems(array());
         self::logEvent('cart_cleared');
+        CouponService::clear();
         return self::snapshot();
     }
 

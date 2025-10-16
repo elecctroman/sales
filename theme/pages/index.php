@@ -329,7 +329,7 @@ $sliderCategories = isset($sliderData['categories']) && is_array($sliderData['ca
             <h2>Blog</h2>
             <small>Guides and industry news</small>
         </div>
-        <a class="section-link" href="/blog.php">Visit blog</a>
+        <a class="section-link" href="/blog">Visit blog</a>
     </div>
     <div class="blog__grid">
         <?php foreach ($blogPosts ?? [] as $post): ?>
