@@ -8,6 +8,7 @@ use App\Database;
 use App\Helpers;
 use App\Homepage;
 use App\Settings;
+use App\PageRepository;
 $script = basename($_SERVER['SCRIPT_NAME']);
 $authContext = array(
     'errors' => array(),
@@ -18,6 +19,16 @@ $authContext = array(
 if ($script === 'product.php' && isset($_GET['slug']) && $_GET['slug'] !== '' && strpos($_SERVER['REQUEST_URI'], 'product.php') !== false) {
     $targetSlug = trim((string)$_GET['slug']);
     Helpers::redirect(Helpers::productUrl($targetSlug));
+}
+
+if ($script === 'page.php' && isset($_GET['slug']) && $_GET['slug'] !== '' && strpos($_SERVER['REQUEST_URI'], 'page.php') !== false) {
+    $targetSlug = Helpers::slugify((string)$_GET['slug']);
+    if ($targetSlug !== '') {
+        $extra = $_GET;
+        unset($extra['slug']);
+        $query = $extra ? ('?' . http_build_query($extra)) : '';
+        Helpers::redirect(Helpers::pageUrl($targetSlug) . $query);
+    }
 }
 
 if ($script === 'cart.php' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -329,8 +340,11 @@ function resolveCategoryPresentation(?array $category, array $overrides, array $
         $image = $defaults[$slug]['image'];
     }
 
-    $icon = $category && !empty($category['icon']) ? (string)$category['icon'] : '';
-    if (isset($style['icon']) && is_string($style['icon']) && $style['icon'] !== '') {
+    $icon = '';
+    if ($category && !empty($category['icon'])) {
+        $icon = (string)$category['icon'];
+    }
+    if ($icon === '' && isset($style['icon']) && is_string($style['icon']) && $style['icon'] !== '') {
         $icon = $style['icon'];
     }
 
@@ -1807,6 +1821,44 @@ switch ($script) {
                 'user' => isset($_SESSION['user']) ? $_SESSION['user'] : null,
             ));
         }
+        exit;
+
+    case 'page.php':
+        $requestedSlug = isset($_GET['slug']) ? Helpers::slugify((string)$_GET['slug']) : '';
+        if ($requestedSlug === '') {
+            http_response_code(404);
+            theme_render('404', array(
+                'pageTitle' => 'Sayfa Bulunamadı',
+                'isLoggedIn' => $isLoggedIn,
+            ));
+            exit;
+        }
+
+        $pageRecord = PageRepository::findBySlug($requestedSlug);
+        if (!$pageRecord) {
+            http_response_code(404);
+            theme_render('404', array(
+                'pageTitle' => 'Sayfa Bulunamadı',
+                'isLoggedIn' => $isLoggedIn,
+            ));
+            exit;
+        }
+
+        $documentTitle = $pageRecord['meta_title'] !== '' ? $pageRecord['meta_title'] : $pageRecord['title'];
+        Helpers::setPageTitle($documentTitle);
+        if (!empty($pageRecord['meta_description'])) {
+            $GLOBALS['pageMetaDescription'] = $pageRecord['meta_description'];
+        }
+        if (!empty($pageRecord['meta_keywords'])) {
+            $GLOBALS['pageMetaKeywords'] = $pageRecord['meta_keywords'];
+        }
+        Helpers::setCanonicalUrl(Helpers::pageUrl($pageRecord['slug'], true));
+
+        theme_render('page', array(
+            'pageTitle' => $documentTitle,
+            'page' => $pageRecord,
+            'isLoggedIn' => $isLoggedIn,
+        ));
         exit;
 
     case 'blog.php':

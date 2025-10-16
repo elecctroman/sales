@@ -66,6 +66,20 @@ CREATE TABLE IF NOT EXISTS categories (
     FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS pages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    slug VARCHAR(150) NOT NULL UNIQUE,
+    title VARCHAR(191) NOT NULL,
+    content MEDIUMTEXT NULL,
+    meta_title VARCHAR(191) NULL,
+    meta_description TEXT NULL,
+    meta_keywords TEXT NULL,
+    status ENUM('draft','published','archived') NOT NULL DEFAULT 'draft',
+    published_at DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     category_id INT NOT NULL,

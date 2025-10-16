@@ -1145,6 +1145,16 @@ body {
     gap: 0.75rem;
 }
 
+.icon-picker--invalid {
+    border-color: #dc2626;
+    box-shadow: 0 10px 30px rgba(220, 38, 38, 0.08);
+}
+
+.icon-picker__manual-input.is-invalid {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.08);
+}
+
 .icon-picker__preview {
     display: flex;
     align-items: center;

@@ -33,6 +33,15 @@ $assertions[] = $sanitized === '&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt
 $invalidInput = "Ge\xffi";
 $assertions[] = mb_check_encoding(htmlspecialchars_decode(Helpers::sanitize($invalidInput)), 'UTF-8');
 
+$pageUrl = Helpers::pageUrl('Gizlilik Politikası');
+$assertions[] = $pageUrl === '/page/gizlilik-politikasi';
+
+$unsafeHtml = '<p onclick="evil()">Merhaba <a href="javascript:alert(1)">test</a></p><script>alert(1)</script>';
+$cleanHtml = Helpers::sanitizePageHtml($unsafeHtml);
+$assertions[] = strpos($cleanHtml, 'onclick') === false;
+$assertions[] = strpos($cleanHtml, 'javascript:') === false;
+$assertions[] = strpos($cleanHtml, '<script') === false;
+
 if (in_array(false, $assertions, true)) {
     fwrite(STDERR, "Testler başarısız oldu.\n");
     exit(1);

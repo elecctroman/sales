@@ -247,6 +247,155 @@ class Helpers
     }
 
     /**
+     * @param string $html
+     * @return string
+     */
+    public static function sanitizePageHtml($html): string
+    {
+        $html = is_string($html) ? trim($html) : '';
+        if ($html === '') {
+            return '';
+        }
+
+        if (!class_exists('\\DOMDocument')) {
+            return self::sanitize($html);
+        }
+
+        $document = new \DOMDocument();
+        $previousState = libxml_use_internal_errors(true);
+
+        $wrapper = '<div>' . $html . '</div>';
+
+        $options = 0;
+        if (defined('LIBXML_HTML_NOIMPLIED')) {
+            $options |= LIBXML_HTML_NOIMPLIED;
+        }
+        if (defined('LIBXML_HTML_NODEFDTD')) {
+            $options |= LIBXML_HTML_NODEFDTD;
+        }
+
+        if (@$document->loadHTML($wrapper, $options) === false) {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previousState);
+
+            return self::sanitize($html);
+        }
+
+        libxml_clear_errors();
+        libxml_use_internal_errors($previousState);
+
+        $allowed = array(
+            'a' => array('href', 'title', 'target', 'rel'),
+            'div' => array(),
+            'p' => array(),
+            'br' => array(),
+            'strong' => array(),
+            'em' => array(),
+            'u' => array(),
+            'ul' => array(),
+            'ol' => array(),
+            'li' => array(),
+            'blockquote' => array(),
+            'code' => array(),
+            'pre' => array(),
+            'h2' => array(),
+            'h3' => array(),
+            'h4' => array(),
+            'h5' => array(),
+            'h6' => array(),
+            'table' => array(),
+            'thead' => array(),
+            'tbody' => array(),
+            'tr' => array(),
+            'th' => array(),
+            'td' => array(),
+            'img' => array('src', 'alt', 'title', 'width', 'height', 'loading'),
+        );
+
+        $nodes = array();
+        $all = $document->getElementsByTagName('*');
+        foreach ($all as $node) {
+            $nodes[] = $node;
+        }
+
+        foreach ($nodes as $node) {
+            $tagName = strtolower($node->nodeName);
+
+            if ($tagName === 'script' || $tagName === 'style') {
+                if ($node->parentNode) {
+                    $node->parentNode->removeChild($node);
+                }
+                continue;
+            }
+
+            if (!isset($allowed[$tagName])) {
+                self::unwrapDomNode($node);
+                continue;
+            }
+
+            for ($i = $node->attributes->length - 1; $i >= 0; $i--) {
+                $attribute = $node->attributes->item($i);
+                if (!$attribute) {
+                    continue;
+                }
+
+                $attrName = strtolower($attribute->nodeName);
+                if (!in_array($attrName, $allowed[$tagName], true)) {
+                    $node->removeAttribute($attribute->nodeName);
+                    continue;
+                }
+
+                $value = trim((string)$attribute->nodeValue);
+
+                if ($attrName === 'href' || $attrName === 'src') {
+                    if ($value === '' || preg_match('/^(javascript|data):/i', $value)) {
+                        $node->removeAttribute($attribute->nodeName);
+                        continue;
+                    }
+
+                    if ($attrName === 'href') {
+                        if (stripos($value, 'mailto:') === 0 || stripos($value, 'tel:') === 0 || strpos($value, '#') === 0) {
+                            // allowed as-is
+                        } elseif (!preg_match('#^https?://#i', $value) && strpos($value, '/') !== 0) {
+                            $value = '/' . ltrim($value, '/');
+                        }
+                    }
+
+                    $node->setAttribute($attribute->nodeName, $value);
+                }
+
+                if ($attrName === 'target') {
+                    $target = strtolower($value);
+                    if ($target === '_blank') {
+                        $existingRel = $node->getAttribute('rel');
+                        $tokens = preg_split('/\s+/', $existingRel, -1, PREG_SPLIT_NO_EMPTY);
+                        $tokens = array_map('strtolower', $tokens);
+                        if (!in_array('noopener', $tokens, true)) {
+                            $tokens[] = 'noopener';
+                        }
+                        if (!in_array('noreferrer', $tokens, true)) {
+                            $tokens[] = 'noreferrer';
+                        }
+                        $node->setAttribute('rel', implode(' ', array_unique($tokens)));
+                    }
+                }
+            }
+        }
+
+        $body = $document->getElementsByTagName('div')->item(0);
+        if (!$body) {
+            return self::sanitize($html);
+        }
+
+        $result = '';
+        foreach ($body->childNodes as $child) {
+            $result .= $document->saveHTML($child);
+        }
+
+        return trim($result);
+    }
+
+    /**
      * @param string $text
      * @param string|null $key
      * @return string
@@ -744,6 +893,25 @@ class Helpers
     }
 
     /**
+     * Generate a static page URL for the given slug.
+     *
+     * @param string $slug
+     * @param bool $absolute
+     * @return string
+     */
+    public static function pageUrl(string $slug, bool $absolute = false): string
+    {
+        $slug = self::slugify($slug);
+        if ($slug === '') {
+            return '#';
+        }
+
+        $path = '/page/' . rawurlencode($slug);
+
+        return $absolute ? self::absoluteUrl($path) : $path;
+    }
+
+    /**
      * Generate a category URL for the given category path or data.
      *
      * @param mixed $category
@@ -788,5 +956,23 @@ class Helpers
         }
 
         return $absolute ? self::absoluteUrl($urlPath) : $urlPath;
+    }
+
+    /**
+     * @param \DOMNode $node
+     * @return void
+     */
+    private static function unwrapDomNode(\DOMNode $node): void
+    {
+        if (!$node->parentNode) {
+            return;
+        }
+
+        $parent = $node->parentNode;
+        while ($node->firstChild) {
+            $parent->insertBefore($node->firstChild, $node);
+        }
+
+        $parent->removeChild($node);
     }
 }
