@@ -1,7 +1,7 @@
 <section class="hero">
     <div class="hero__content">
-        <h1>Discover Digital Goods</h1>
-        <p>Buy game credits, software licenses, and subscriptions in seconds.</p>
-        <a class="hero__cta" href="/catalog.php">Browse Catalog</a>
+        <h1>Dijital Ürünleri Keşfedin</h1>
+        <p>Oyun kodu, yazılım lisansı ve abonelikleri saniyeler içinde satın alın.</p>
+        <a class="hero__cta" href="/kategori/">Kategorileri Gör</a>
     </div>
 </section>

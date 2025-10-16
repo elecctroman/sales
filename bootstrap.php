@@ -102,11 +102,6 @@ if (!empty($_SESSION['user'])) {
             App\Helpers::redirect('/admin/login.php');
         }
     }
-
-    $preferredLanguage = App\Settings::get('user_' . $_SESSION['user']['id'] . '_preferred_language');
-    if ($preferredLanguage) {
-        App\Lang::setLocale($preferredLanguage);
-    }
 }
 
 

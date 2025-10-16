@@ -3,7 +3,6 @@
 use App\Auth;
 use App\Helpers;
 use App\Database;
-use App\Lang;
 use App\FeatureToggle;
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -13,19 +12,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 $user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
 $pageHeadline = isset($pageTitle) ? $pageTitle : 'Panel';
 
-Lang::boot();
-
 $siteName = Helpers::siteName();
 $siteTagline = Helpers::siteTagline();
 $metaDescription = Helpers::seoDescription();
 $metaKeywords = Helpers::seoKeywords();
-
-if (!isset($GLOBALS['app_lang_buffer_started'])) {
-    $GLOBALS['app_lang_buffer_started'] = true;
-    ob_start(function ($buffer) {
-        return Lang::filterOutput($buffer);
-    });
-}
 
 $menuSections = array();
 $menuBadges = array();
@@ -300,7 +290,7 @@ if ($user) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="<?= Lang::htmlLocale() ?>">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

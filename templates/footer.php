@@ -2,7 +2,6 @@
 
 use App\Helpers;
 
-$languageBufferActive = !empty($GLOBALS['app_lang_buffer_started']);
 $pageScripts = isset($GLOBALS['pageScripts']) && is_array($GLOBALS['pageScripts']) ? $GLOBALS['pageScripts'] : array();
 $pageInlineScripts = isset($GLOBALS['pageInlineScripts']) && is_array($GLOBALS['pageInlineScripts']) ? $GLOBALS['pageInlineScripts'] : array();
 ?>
@@ -27,10 +26,4 @@ $pageInlineScripts = isset($GLOBALS['pageInlineScripts']) && is_array($GLOBALS['
 <?php endforeach; ?>
 </body>
 </html>
-<?php
-if ($languageBufferActive) {
-    ob_end_flush();
-    unset($GLOBALS['app_lang_buffer_started']);
-}
-?>
 

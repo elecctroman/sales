@@ -1,0 +1,7 @@
+RewriteEngine On
+RewriteBase /
+
+RewriteRule ^kategori/?$ kategori.php [L,QSA]
+RewriteRule ^kategori/(.+)$ kategori.php?slug=$1 [L,QSA]
+
+RewriteRule ^catalog/?$ kategori.php [R=301,L]

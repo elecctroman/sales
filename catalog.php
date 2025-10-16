@@ -1,2 +1,6 @@
-﻿<?php
-require __DIR__ . '/index.php';
+<?php
+require __DIR__ . '/bootstrap.php';
+
+use App\Helpers;
+
+Helpers::redirect(Helpers::categoryUrl(''));
