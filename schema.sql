@@ -66,6 +66,38 @@ CREATE TABLE IF NOT EXISTS categories (
     FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS pages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    slug VARCHAR(150) NOT NULL UNIQUE,
+    title VARCHAR(191) NOT NULL,
+    content MEDIUMTEXT NULL,
+    meta_title VARCHAR(191) NULL,
+    meta_description TEXT NULL,
+    meta_keywords TEXT NULL,
+    status ENUM('draft','published','archived') NOT NULL DEFAULT 'draft',
+    published_at DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    excerpt TEXT NULL,
+    content LONGTEXT NOT NULL,
+    author_name VARCHAR(150) NULL,
+    featured_image VARCHAR(255) NULL,
+    seo_title VARCHAR(255) NULL,
+    seo_description VARCHAR(255) NULL,
+    seo_keywords TEXT NULL,
+    is_published TINYINT(1) NOT NULL DEFAULT 0,
+    published_at DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_blog_posts_published (is_published, published_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     category_id INT NOT NULL,

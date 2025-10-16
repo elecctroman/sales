@@ -1,6 +1,27 @@
 RewriteEngine On
 RewriteBase /
 
+RewriteCond %{THE_REQUEST} \s/+account\.php[?\s] [NC]
+RewriteRule ^account\.php$ /account [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+blog\.php[?\s] [NC]
+RewriteRule ^blog\.php$ /blog [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+page\.php\? [NC]
+RewriteCond %{QUERY_STRING} ^slug=([^&]+)$ [NC]
+RewriteRule ^page\.php$ page/%1? [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+page\.php\? [NC]
+RewriteCond %{QUERY_STRING} ^slug=([^&]+)&(.+)$ [NC]
+RewriteRule ^page\.php$ page/%1?%2 [R=301,L,NE]
+
+RewriteCond %{THE_REQUEST} \s/+page\.php[?\s] [NC]
+RewriteRule ^page\.php$ page? [R=301,L]
+
+RewriteRule ^account/?$ account.php [L,QSA]
+RewriteRule ^blog/([^/]+)/?$ blog.php?slug=$1 [L,QSA]
+RewriteRule ^blog/?$ blog.php [L,QSA]
+RewriteRule ^page/([^/]+)/?$ page.php?slug=$1 [L,QSA]
 RewriteRule ^kategori/?$ kategori.php [L,QSA]
 RewriteRule ^kategori/(.+)$ kategori.php?slug=$1 [L,QSA]
 

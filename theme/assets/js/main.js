@@ -769,6 +769,85 @@ document.addEventListener('DOMContentLoaded', () => {
             closeCheckoutModal();
         }
     });
+
+    document.querySelectorAll('[data-copy-target]').forEach((button) => {
+        const targetSelector = button.getAttribute('data-copy-target');
+        if (!targetSelector) {
+            return;
+        }
+
+        const originalLabel = button.textContent.trim();
+        const successLabel = button.getAttribute('data-copy-success') || 'Kopyalandı!';
+
+        const resetState = () => {
+            button.classList.remove('is-copied');
+            if (originalLabel !== '') {
+                button.textContent = originalLabel;
+            }
+        };
+
+        const showSuccess = () => {
+            if (successLabel !== '') {
+                button.textContent = successLabel;
+            }
+            button.classList.add('is-copied');
+            setTimeout(() => {
+                resetState();
+            }, 2000);
+        };
+
+        const fallbackCopy = (value) => {
+            const helper = document.createElement('textarea');
+            helper.value = value;
+            helper.setAttribute('readonly', 'readonly');
+            helper.style.position = 'absolute';
+            helper.style.left = '-9999px';
+            document.body.appendChild(helper);
+            helper.select();
+            try {
+                const copied = document.execCommand('copy');
+                if (copied) {
+                    showSuccess();
+                }
+            } catch (error) {
+                console.warn('Copy command is not supported', error);
+            }
+            document.body.removeChild(helper);
+        };
+
+        const handleCopy = () => {
+            const target = document.querySelector(targetSelector);
+            if (!target) {
+                return;
+            }
+
+            let value = '';
+            if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+                value = target.value;
+            } else {
+                value = target.textContent || '';
+            }
+
+            if (value === '') {
+                return;
+            }
+
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                navigator.clipboard.writeText(value).then(() => {
+                    showSuccess();
+                }).catch(() => {
+                    fallbackCopy(value);
+                });
+            } else {
+                fallbackCopy(value);
+            }
+        };
+
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            handleCopy();
+        });
+    });
 });
 
 

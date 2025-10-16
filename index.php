@@ -8,6 +8,9 @@ use App\Database;
 use App\Helpers;
 use App\Homepage;
 use App\Settings;
+use App\PageRepository;
+use App\BlogRepository;
+use App\ApiToken;
 $script = basename($_SERVER['SCRIPT_NAME']);
 $authContext = array(
     'errors' => array(),
@@ -18,6 +21,16 @@ $authContext = array(
 if ($script === 'product.php' && isset($_GET['slug']) && $_GET['slug'] !== '' && strpos($_SERVER['REQUEST_URI'], 'product.php') !== false) {
     $targetSlug = trim((string)$_GET['slug']);
     Helpers::redirect(Helpers::productUrl($targetSlug));
+}
+
+if ($script === 'page.php' && isset($_GET['slug']) && $_GET['slug'] !== '' && strpos($_SERVER['REQUEST_URI'], 'page.php') !== false) {
+    $targetSlug = Helpers::slugify((string)$_GET['slug']);
+    if ($targetSlug !== '') {
+        $extra = $_GET;
+        unset($extra['slug']);
+        $query = $extra ? ('?' . http_build_query($extra)) : '';
+        Helpers::redirect(Helpers::pageUrl($targetSlug) . $query);
+    }
 }
 
 if ($script === 'cart.php' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -276,18 +289,24 @@ function defaultBlogPosts(): array
             'excerpt' => 'All-in-one digital goods platform with instant delivery.',
             'date' => '12 Oct 2025',
             'image' => '/theme/assets/images/blog/HApvChgiIiapIJu5zDkXgSrMsU6C9aZvQpjm3jXt.jpg',
+            'slug' => 'launch-of-our-new-marketplace',
+            'url' => '/blog/launch-of-our-new-marketplace',
         ),
         array(
             'title' => 'How to sell game credits globally',
             'excerpt' => 'Strategy for scaling cross-border payment flows.',
             'date' => '05 Oct 2025',
             'image' => '/theme/assets/images/blog/HApvChgiIiapIJu5zDkXgSrMsU6C9aZvQpjm3jXt.jpg',
+            'slug' => 'how-to-sell-game-credits-globally',
+            'url' => '/blog/how-to-sell-game-credits-globally',
         ),
         array(
             'title' => 'Valorant meta: duelist patch review',
             'excerpt' => 'Tips from top ladder players this season.',
             'date' => '29 Sep 2025',
             'image' => '/theme/assets/images/blog/HApvChgiIiapIJu5zDkXgSrMsU6C9aZvQpjm3jXt.jpg',
+            'slug' => 'valorant-meta-duelist-patch-review',
+            'url' => '/blog/valorant-meta-duelist-patch-review',
         ),
     );
 }
@@ -329,8 +348,11 @@ function resolveCategoryPresentation(?array $category, array $overrides, array $
         $image = $defaults[$slug]['image'];
     }
 
-    $icon = $category && !empty($category['icon']) ? (string)$category['icon'] : '';
-    if (isset($style['icon']) && is_string($style['icon']) && $style['icon'] !== '') {
+    $icon = '';
+    if ($category && !empty($category['icon'])) {
+        $icon = (string)$category['icon'];
+    }
+    if ($icon === '' && isset($style['icon']) && is_string($style['icon']) && $style['icon'] !== '') {
         $icon = $style['icon'];
     }
 
@@ -474,8 +496,40 @@ $catalogProducts = array();
 $popularCategories = array();
 $navCategories = array();
 
+$mapBlogEntry = function (array $post): array {
+    $excerpt = isset($post['excerpt']) && $post['excerpt'] !== ''
+        ? (string)$post['excerpt']
+        : Helpers::truncate(strip_tags(isset($post['content']) ? (string)$post['content'] : ''), 160);
+    $dateLabel = isset($post['date_label']) && $post['date_label'] !== ''
+        ? (string)$post['date_label']
+        : ((isset($post['published_at']) && $post['published_at'] !== '') ? date('d M Y', strtotime($post['published_at'])) : '');
+
+    return array(
+        'title' => isset($post['title']) ? (string)$post['title'] : '',
+        'excerpt' => $excerpt,
+        'date' => $dateLabel,
+        'image' => isset($post['featured_image']) ? $post['featured_image'] : (isset($post['image']) ? $post['image'] : null),
+        'url' => isset($post['url']) && $post['url'] !== '' ? (string)$post['url'] : ('/blog/' . (isset($post['slug']) ? $post['slug'] : '')),
+        'slug' => isset($post['slug']) ? (string)$post['slug'] : '',
+        'author' => isset($post['author_name']) ? (string)$post['author_name'] : null,
+    );
+};
+
+$blogPageContext = array(
+    'posts' => array(),
+    'post' => null,
+    'pagination' => array(
+        'page' => 1,
+        'pages' => 0,
+        'total' => 0,
+    ),
+);
+$blogNotFound = false;
+
 try {
     $pdo = Database::connection();
+
+    PageRepository::ensureDefaultPages();
 
     if ($script === 'product.php') {
         $productPageContext['commentFeedback']['errors'] = Helpers::getFlash('product_comment_errors', array());
@@ -502,11 +556,42 @@ try {
         }
     }
 
-    $blogSetting = decodeSettingArray('homepage_blog_posts');
-    if ($blogSetting) {
-        $normalisedPosts = normaliseBlogEntries($blogSetting);
-        if ($normalisedPosts) {
-            $blogPosts = $normalisedPosts;
+    if ($script === 'blog.php') {
+        $requestedBlogSlug = isset($_GET['slug']) ? Helpers::slugify((string)$_GET['slug']) : '';
+        $requestedBlogPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+        if ($requestedBlogSlug !== '') {
+            $postRecord = BlogRepository::findBySlug($requestedBlogSlug);
+            if ($postRecord) {
+                $blogPageContext['post'] = $postRecord;
+            } else {
+                $blogNotFound = true;
+            }
+        } else {
+            $pagination = BlogRepository::paginatePublished($requestedBlogPage > 0 ? $requestedBlogPage : 1, 9);
+            $blogPageContext['pagination'] = array(
+                'page' => $pagination['page'],
+                'pages' => $pagination['pages'],
+                'total' => $pagination['total'],
+            );
+            $blogPageContext['posts'] = array_map($mapBlogEntry, $pagination['items']);
+
+            if (!$blogPageContext['posts'] && $blogPosts) {
+                $blogPageContext['posts'] = $blogPosts;
+            }
+        }
+    }
+
+    $fetchedBlogPosts = BlogRepository::listPublished(6);
+    if ($fetchedBlogPosts) {
+        $blogPosts = array_map($mapBlogEntry, $fetchedBlogPosts);
+    } else {
+        $blogSetting = decodeSettingArray('homepage_blog_posts');
+        if ($blogSetting) {
+            $normalisedPosts = normaliseBlogEntries($blogSetting);
+            if ($normalisedPosts) {
+                $blogPosts = $normalisedPosts;
+            }
         }
     }
 
@@ -1458,7 +1543,7 @@ if ($navCategories) {
 $cartSnapshot = Cart::snapshot();
 $GLOBALS['theme_cart_summary'] = $cartSnapshot;
 
-$accountTabs = array('profile', 'password', 'orders', 'balance', 'support', 'sessions');
+$accountTabs = array('profile', 'password', 'orders', 'balance', 'support', 'sessions', 'api');
 $accountFeedback = array(
     'activeTab' => 'profile',
     'messages' => array(),
@@ -1479,6 +1564,7 @@ $accountData = array(
     'ticketMessages' => array(),
     'sessions' => array(),
     'balance' => $isLoggedIn && isset($_SESSION['user']['balance']) ? (float)$_SESSION['user']['balance'] : 0.0,
+    'api' => array(),
 );
 
 if ($script === 'account.php') {
@@ -1510,6 +1596,30 @@ if ($script === 'account.php') {
             $accountData['balance'] = isset($freshUser['balance']) ? (float)$freshUser['balance'] : 0.0;
         }
     }
+
+    $buildApiContext = function () use ($userId) {
+        $baseUrl = Helpers::absoluteUrl('/api/v1/');
+        if ($baseUrl !== '' && substr($baseUrl, -1) !== '/') {
+            $baseUrl .= '/';
+        }
+
+        $docsUrl = Helpers::pageUrl('api-dokumantasyon');
+        $tokenRecord = ApiToken::findLatestForUser($userId);
+
+        return array(
+            'base_url' => $baseUrl,
+            'docs_url' => $docsUrl,
+            'token' => $tokenRecord ? $tokenRecord['token'] : '',
+            'token_id' => $tokenRecord ? (int)$tokenRecord['id'] : null,
+            'label' => $tokenRecord && !empty($tokenRecord['label']) ? $tokenRecord['label'] : '',
+            'webhook_url' => $tokenRecord && !empty($tokenRecord['webhook_url']) ? $tokenRecord['webhook_url'] : '',
+            'created_at' => $tokenRecord ? $tokenRecord['created_at'] : null,
+            'last_used_at' => $tokenRecord ? $tokenRecord['last_used_at'] : null,
+            'has_token' => (bool)$tokenRecord,
+        );
+    };
+
+    $accountData['api'] = $buildApiContext();
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $postTab = isset($_POST['tab']) ? strtolower(trim((string)$_POST['tab'])) : $accountFeedback['activeTab'];
@@ -1687,11 +1797,97 @@ if ($script === 'account.php') {
                     $messageBag['success'] = 'Mesajiniz gonderildi.';
                     break;
 
+                case 'generate_api_token':
+                    if ($postTab !== 'api') {
+                        $messageBag['errors'][] = 'Gecersiz islem secildi.';
+                        break;
+                    }
+
+                    $labelInput = isset($_POST['label']) ? trim((string)$_POST['label']) : '';
+                    if ($labelInput !== '' && mb_strlen($labelInput) > 150) {
+                        $messageBag['errors'][] = 'Etiket 150 karakterden uzun olamaz.';
+                        break;
+                    }
+
+                    if (!empty($accountData['api']['has_token'])) {
+                        $messageBag['errors'][] = 'Aktif bir API anahtariniz zaten mevcut.';
+                        break;
+                    }
+
+                    try {
+                        ApiToken::issueToken($userId, $labelInput !== '' ? $labelInput : 'WooCommerce Entegrasyonu');
+                        $messageBag['success'] = 'Yeni API anahtariniz olusturuldu.';
+                    } catch (\Throwable $exception) {
+                        $messageBag['errors'][] = 'API anahtari olusturulurken bir hata olustu.';
+                    }
+                    break;
+
+                case 'regenerate_api_token':
+                    if ($postTab !== 'api') {
+                        $messageBag['errors'][] = 'Gecersiz islem secildi.';
+                        break;
+                    }
+
+                    $labelInput = isset($_POST['label']) ? trim((string)$_POST['label']) : '';
+                    if ($labelInput !== '' && mb_strlen($labelInput) > 150) {
+                        $messageBag['errors'][] = 'Etiket 150 karakterden uzun olamaz.';
+                        break;
+                    }
+
+                    try {
+                        $newToken = ApiToken::regenerateForUser($userId);
+                        if ($labelInput !== '') {
+                            ApiToken::updateSettings($newToken['id'], $labelInput, null);
+                        }
+                        $messageBag['success'] = 'API anahtariniz basariyla yenilendi.';
+                    } catch (\Throwable $exception) {
+                        $messageBag['errors'][] = 'API anahtari yenilenirken bir hata olustu.';
+                    }
+                    break;
+
+                case 'save_api_settings':
+                    if ($postTab !== 'api') {
+                        $messageBag['errors'][] = 'Gecersiz islem secildi.';
+                        break;
+                    }
+
+                    $labelInput = isset($_POST['label']) ? trim((string)$_POST['label']) : '';
+                    $webhookInput = isset($_POST['webhook_url']) ? trim((string)$_POST['webhook_url']) : '';
+
+                    if ($labelInput !== '' && mb_strlen($labelInput) > 150) {
+                        $messageBag['errors'][] = 'Etiket 150 karakterden uzun olamaz.';
+                    }
+
+                    if ($webhookInput !== '' && !filter_var($webhookInput, FILTER_VALIDATE_URL)) {
+                        $messageBag['errors'][] = 'Webhook adresi gecerli bir URL olmalidir.';
+                    } elseif ($webhookInput !== '' && !preg_match('#^https?://#i', $webhookInput)) {
+                        $messageBag['errors'][] = 'Webhook adresi http veya https ile baslamalidir.';
+                    }
+
+                    $currentToken = $accountData['api'];
+                    if (empty($currentToken['token_id'])) {
+                        $messageBag['errors'][] = 'Once bir API anahtari olusturmalisiniz.';
+                    }
+
+                    if (!$messageBag['errors']) {
+                        try {
+                            ApiToken::updateSettings($currentToken['token_id'], $labelInput, $webhookInput);
+                            $messageBag['success'] = 'API ayarlariniz guncellendi.';
+                        } catch (\Throwable $exception) {
+                            $messageBag['errors'][] = 'Ayarlar kaydedilemedi. Daha sonra tekrar deneyin.';
+                        }
+                    }
+                    break;
+
                 default:
                     $messageBag['errors'][] = 'Bilinmeyen bir islem secildi.';
                     break;
             }
         }
+    }
+
+    if (isset($buildApiContext) && in_array($action, array('generate_api_token', 'regenerate_api_token', 'save_api_settings'), true)) {
+        $accountData['api'] = $buildApiContext();
     }
 
     if ($pdo && $userId > 0) {
@@ -1809,10 +2005,86 @@ switch ($script) {
         }
         exit;
 
+    case 'page.php':
+        $requestedSlug = isset($_GET['slug']) ? Helpers::slugify((string)$_GET['slug']) : '';
+        if ($requestedSlug === '') {
+            http_response_code(404);
+            theme_render('404', array(
+                'pageTitle' => 'Sayfa Bulunamadı',
+                'isLoggedIn' => $isLoggedIn,
+            ));
+            exit;
+        }
+
+        $pageRecord = PageRepository::findBySlug($requestedSlug);
+        if (!$pageRecord) {
+            http_response_code(404);
+            theme_render('404', array(
+                'pageTitle' => 'Sayfa Bulunamadı',
+                'isLoggedIn' => $isLoggedIn,
+            ));
+            exit;
+        }
+
+        $documentTitle = $pageRecord['meta_title'] !== '' ? $pageRecord['meta_title'] : $pageRecord['title'];
+        Helpers::setPageTitle($documentTitle);
+        if (!empty($pageRecord['meta_description'])) {
+            $GLOBALS['pageMetaDescription'] = $pageRecord['meta_description'];
+        }
+        if (!empty($pageRecord['meta_keywords'])) {
+            $GLOBALS['pageMetaKeywords'] = $pageRecord['meta_keywords'];
+        }
+        Helpers::setCanonicalUrl(Helpers::pageUrl($pageRecord['slug'], true));
+
+        theme_render('page', array(
+            'pageTitle' => $documentTitle,
+            'page' => $pageRecord,
+            'isLoggedIn' => $isLoggedIn,
+        ));
+        exit;
+
     case 'blog.php':
+        if ($blogNotFound) {
+            http_response_code(404);
+            theme_render('404', array(
+                'pageTitle' => 'Yazı Bulunamadı',
+                'isLoggedIn' => $isLoggedIn,
+            ));
+            exit;
+        }
+
+        if (!empty($blogPageContext['post'])) {
+            $post = $blogPageContext['post'];
+            $documentTitle = !empty($post['seo_title']) ? $post['seo_title'] : $post['title'];
+            Helpers::setPageTitle($documentTitle);
+
+            if (!empty($post['seo_description'])) {
+                $GLOBALS['pageMetaDescription'] = $post['seo_description'];
+            } elseif (!empty($post['excerpt'])) {
+                $GLOBALS['pageMetaDescription'] = $post['excerpt'];
+            }
+
+            if (!empty($post['seo_keywords'])) {
+                $GLOBALS['pageMetaKeywords'] = $post['seo_keywords'];
+            }
+
+            Helpers::setCanonicalUrl(Helpers::absoluteUrl('/blog/' . $post['slug']));
+
+            theme_render('blog-post', array(
+                'pageTitle' => $documentTitle,
+                'post' => $post,
+                'isLoggedIn' => $isLoggedIn,
+            ));
+            exit;
+        }
+
+        Helpers::setPageTitle('Blog');
+        Helpers::setCanonicalUrl(Helpers::absoluteUrl('/blog'));
+
         theme_render('blog', array(
             'pageTitle' => 'Blog',
-            'posts' => $blogPosts,
+            'posts' => $blogPageContext['posts'] ? $blogPageContext['posts'] : $blogPosts,
+            'pagination' => $blogPageContext['pagination'],
             'isLoggedIn' => $isLoggedIn,
         ));
         exit;

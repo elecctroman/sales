@@ -110,7 +110,7 @@ foreach ($notifications as $notificationItem) {
                     <span>Kayıt Ol</span>
                 </a>
             <?php else: ?>
-                <a href="/account.php" class="site-header__user" data-account-link>
+                <a href="/account" class="site-header__user" data-account-link>
                     <span class="site-header__user-avatar" aria-hidden="true"><?= htmlspecialchars($userInitials !== '' ? $userInitials : 'U', ENT_QUOTES, 'UTF-8') ?></span>
                     <span class="site-header__user-details">
                         <span class="site-header__user-name">

@@ -17,9 +17,10 @@ use App\Helpers;
             <h5>Müşteri Hizmetleri</h5>
             <ul>
                 <li><a href="/support.php">Destek Merkezi</a></li>
-                <li><a href="#">Sipariş Takibi</a></li>
-                <li><a href="#">İade Politikası</a></li>
-                <li><a href="#">Gizlilik Politikası</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::pageUrl('order-tracking'), ENT_QUOTES, 'UTF-8') ?>">Sipariş Takibi</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::pageUrl('iade'), ENT_QUOTES, 'UTF-8') ?>">İade Politikası</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::pageUrl('gizlilik-politikasi'), ENT_QUOTES, 'UTF-8') ?>">Gizlilik Politikası</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::pageUrl('kullanim-sartlari'), ENT_QUOTES, 'UTF-8') ?>">Kullanım Şartları</a></li>
             </ul>
         </div>
         <div>
@@ -34,9 +35,9 @@ use App\Helpers;
         <div>
             <h5>Şirket</h5>
             <ul>
-                <li><a href="/blog.php">Blog</a></li>
-                <li><a href="#">Hakkımızda</a></li>
-                <li><a href="#">Kariyer</a></li>
+                <li><a href="/blog">Blog</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::pageUrl('about-us'), ENT_QUOTES, 'UTF-8') ?>">Hakkımızda</a></li>
+                <li><a href="<?= htmlspecialchars(Helpers::pageUrl('careers'), ENT_QUOTES, 'UTF-8') ?>">Kariyer</a></li>
                 <li><a href="/contact.php">İletişim</a></li>
             </ul>
         </div>
