@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Database;
+use App\BlogRepository;
 use App\Helpers;
 use App\Settings;
 use DateInterval;
@@ -453,22 +454,28 @@ class ContentAutomationService
      */
     private static function ensureBlogTables()
     {
-        $pdo = Database::connection();
-        $pdo->exec('CREATE TABLE IF NOT EXISTS blog_posts (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            slug VARCHAR(255) NOT NULL UNIQUE,
-            excerpt TEXT NOT NULL,
-            content LONGTEXT NOT NULL,
-            featured_image VARCHAR(255) NULL,
-            seo_title VARCHAR(255) NULL,
-            seo_description VARCHAR(255) NULL,
-            seo_keywords TEXT NULL,
-            is_published TINYINT(1) NOT NULL DEFAULT 1,
-            published_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+        try {
+            BlogRepository::all(1);
+        } catch (\Throwable $exception) {
+            $pdo = Database::connection();
+            $pdo->exec('CREATE TABLE IF NOT EXISTS blog_posts (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                slug VARCHAR(255) NOT NULL UNIQUE,
+                excerpt TEXT NULL,
+                content LONGTEXT NOT NULL,
+                author_name VARCHAR(150) NULL,
+                featured_image VARCHAR(255) NULL,
+                seo_title VARCHAR(255) NULL,
+                seo_description VARCHAR(255) NULL,
+                seo_keywords TEXT NULL,
+                is_published TINYINT(1) NOT NULL DEFAULT 0,
+                published_at DATETIME NULL,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_blog_posts_published (is_published, published_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+        }
     }
 
     /**

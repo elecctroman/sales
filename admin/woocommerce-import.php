@@ -98,7 +98,7 @@ include __DIR__ . '/templates/header.php';
                             <span class="import-supported-title">Desteklenen sütunlar</span>
                             <span class="import-supported-list">Name, Categories, Regular price/Price (TRY), SKU, Description, Short description, Status.</span>
                         </div>
-                        <p class="text-muted small mt-2 mb-0">Regular price alanındaki değerler TL olarak yorumlanır; sistem güncel kur ve komisyon oranınızı kullanarak USD satış fiyatını otomatik hesaplar.</p>
+                        <p class="text-muted small mt-2 mb-0">Regular price alanındaki değerler TL olarak yorumlanır ve komisyon oranınız eklenerek satış fiyatı otomatik hesaplanır.</p>
                         <button type="submit" class="btn btn-primary">Dosyayı İçe Aktar</button>
                     </form>
 
@@ -117,7 +117,7 @@ include __DIR__ . '/templates/header.php';
                         <li>Varsayılan alanları seçili bırakın ve CSV dosyasını dışa aktarın.</li>
                         <li>Bu ekrandan dosyanızı yükleyin; kategori ve ürünler eşleşerek güncellenecektir.</li>
                         <li>Aynı SKU veya başlığa sahip ürünler güncellenir, diğerleri yeni olarak eklenir.</li>
-                        <li>Regular price sütunundaki rakamların TL olduğundan emin olun; sistem USD satış fiyatını ve komisyonu otomatik hesaplar.</li>
+                        <li>Regular price sütunundaki rakamların TL olduğundan emin olun; sistem satış fiyatını ve komisyonu otomatik hesaplar.</li>
                         <li>İşlem tamamlandığında burada bildirim alırsınız.</li>
                     </ol>
                 </div>

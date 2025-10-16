@@ -36,6 +36,44 @@ function normalize_optional_text(?string $value, int $maxLength): ?string
     return $trimmed;
 }
 
+/**
+ * @param string|null $value
+ * @return array{value:?string,error:bool,message:?string}
+ */
+function normalize_icon_input(?string $value): array
+{
+    if ($value === null) {
+        return array('value' => null, 'error' => false, 'message' => null);
+    }
+
+    $trimmedOriginal = trim($value);
+    if ($trimmedOriginal === '') {
+        return array('value' => null, 'error' => false, 'message' => null);
+    }
+
+    $normalized = normalize_optional_text($value, 150);
+    if ($normalized === null) {
+        return array(
+            'value' => null,
+            'error' => true,
+            'message' => 'Icon alanı 150 karakterden uzun olamaz.',
+        );
+    }
+
+    $normalized = preg_replace('/\s+/u', ' ', $normalized);
+    $pattern = '/^(iconify:[A-Za-z0-9:_-]+|[A-Za-z0-9:_-]+(?:\s+[A-Za-z0-9:_-]+)*)$/u';
+
+    if (!preg_match($pattern, $normalized)) {
+        return array(
+            'value' => null,
+            'error' => true,
+            'message' => 'Icon alanında yalnızca harf, rakam, : , - ve _ karakterleri kullanılabilir.',
+        );
+    }
+
+    return array('value' => $normalized, 'error' => false, 'message' => null);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($_POST['action']) ? $_POST['action'] : '';
     $token = isset($_POST['csrf_token']) ? $_POST['csrf_token'] : '';
@@ -50,15 +88,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $iconValue = isset($_POST['icon']) ? $_POST['icon'] : null;
             $imageValue = isset($_POST['image']) ? $_POST['image'] : null;
 
-            $icon = normalize_optional_text($iconValue, 150);
+            $iconResult = normalize_icon_input($iconValue);
+            $icon = $iconResult['value'];
             $image = normalize_optional_text($imageValue, 255);
 
             if ($name === '') {
                 $errors[] = 'Kategori adı zorunludur.';
             }
 
-            if ($iconValue !== null && $icon === null && trim($iconValue) !== '') {
-                $errors[] = 'Icon alanı 150 karakterden uzun olamaz.';
+            if ($iconResult['error']) {
+                $errors[] = $iconResult['message'];
             }
 
             if ($imageValue !== null && $image === null && trim($imageValue) !== '') {
@@ -101,7 +140,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $iconValue = isset($_POST['icon']) ? $_POST['icon'] : null;
             $imageValue = isset($_POST['image']) ? $_POST['image'] : null;
 
-            $icon = normalize_optional_text($iconValue, 150);
+            $iconResult = normalize_icon_input($iconValue);
+            $icon = $iconResult['value'];
             $image = normalize_optional_text($imageValue, 255);
 
             if ($categoryId <= 0) {
@@ -112,8 +152,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Kategori adı zorunludur.';
             }
 
-            if ($iconValue !== null && $icon === null && trim($iconValue) !== '') {
-                $errors[] = 'Icon alanı 150 karakterden uzun olamaz.';
+            if ($iconResult['error']) {
+                $errors[] = $iconResult['message'];
             }
 
             if ($imageValue !== null && $image === null && trim($imageValue) !== '') {
@@ -354,14 +394,20 @@ include __DIR__ . '/templates/header.php';
                             <?php foreach ($flattenedCategories as $category): ?>
                                 <?php $count = isset($productCountMap[$category['id']]) ? $productCountMap[$category['id']] : 0; ?>
                                 <?php $map = isset($categoryMap[$category['id']]) ? $categoryMap[$category['id']] : array(); ?>
+                                <?php $iconValue = isset($category['icon']) ? trim((string)$category['icon']) : ''; ?>
+                                <?php $iconifyName = $iconValue !== '' && strpos($iconValue, 'iconify:') === 0 ? substr($iconValue, 8) : ''; ?>
                                 <tr>
                                     <td style="padding-left: <?= 12 + ($category['depth'] * 18) ?>px;">
                                         <div class="d-flex align-items-center gap-2">
                                             <?php if (!empty($category['image'])): ?>
                                                 <img src="<?= Helpers::sanitize($category['image']) ?>" alt="" width="28" height="28" class="rounded-circle border">
-                                            <?php elseif (!empty($category['icon'])): ?>
+                                            <?php elseif ($iconValue !== ''): ?>
                                                 <span class="badge bg-light text-dark px-2 py-1">
-                                                    <i class="<?= Helpers::sanitize($category['icon']) ?>"></i>
+                                                    <?php if ($iconifyName !== ''): ?>
+                                                        <span class="iconify" data-icon="<?= Helpers::sanitize($iconifyName) ?>" aria-hidden="true"></span>
+                                                    <?php else: ?>
+                                                        <i class="<?= Helpers::sanitize($iconValue) ?>" aria-hidden="true"></i>
+                                                    <?php endif; ?>
                                                 </span>
                                             <?php else: ?>
                                                 <span class="badge bg-secondary-subtle text-secondary-emphasis px-2 py-1">

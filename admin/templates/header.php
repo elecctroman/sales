@@ -47,247 +47,38 @@ if ($isAdminRole) {
 
 if ($user) {
     if ($isAdminRole && $isAdminArea) {
-        $adminSections = array(
-            array(
-                'heading' => '',
-                'items' => array(
-                    array(
-                        'label' => 'Anasayfa',
-                        'href' => '/admin/dashboard.php',
-                        'pattern' => '/admin/dashboard.php',
-                        'icon' => 'bi-house',
-                        'roles' => Auth::adminRoles(),
-                    ),
-                    array(
-                        'label' => 'Genel Ayarlar',
-                        'icon' => 'bi-sliders',
-                        'pattern' => '/admin/settings-general.php',
-                        'roles' => array('super_admin', 'admin'),
-                        'children' => array(
-                            array(
-                                'label' => 'Site Ayarlari',
-                                'href' => '/admin/settings-general.php',
-                                'pattern' => '/admin/settings-general.php',
-                                'roles' => array('super_admin', 'admin'),
-                            ),
-                            array(
-                                'label' => 'Mail Ayarlari',
-                                'href' => '/admin/settings-mail.php',
-                                'pattern' => '/admin/settings-mail.php',
-                                'roles' => array('super_admin', 'admin'),
-                            ),
-                            array(
-                                'label' => 'Telegram Entegrasyonu',
-                                'href' => '/admin/settings-telegram.php',
-                                'pattern' => '/admin/settings-telegram.php',
-                                'roles' => array('super_admin', 'admin'),
-                            ),
-                            array(
-                                'label' => 'Slider Sistemi',
-                                'href' => '/admin/settings-slider.php',
-                                'pattern' => '/admin/settings-slider.php',
-                                'roles' => array('super_admin', 'admin'),
-                            ),
-                        ),
-                    ),
-                    array(
-                        'label' => 'Odemeler',
-                        'icon' => 'bi-credit-card',
-                        'roles' => array('super_admin', 'admin', 'finance'),
-                        'children' => array(
-                            array(
-                                'label' => 'Odeme Yontemleri',
-                                'href' => '/admin/settings-payments.php',
-                                'pattern' => '/admin/settings-payments.php',
-                                'roles' => array('super_admin', 'admin', 'finance'),
-                            ),
-                            array(
-                                'label' => 'Bakiyeler',
-                                'href' => '/admin/balances.php',
-                                'pattern' => '/admin/balances.php',
-                                'roles' => array('super_admin', 'admin', 'finance'),
-                            ),
-                            array(
-                                'label' => 'Transfer Bildirimleri',
-                                'href' => '/admin/payment-notifications.php',
-                                'pattern' => '/admin/payment-notifications.php',
-                                'roles' => array('super_admin', 'admin', 'finance'),
-                                'badge' => isset($menuBadges['/admin/payment-notifications.php']) ? (int)$menuBadges['/admin/payment-notifications.php'] : 0,
-                            ),
-                        ),
-                    ),
-                    array(
-                        'label' => 'Raporlar',
-                        'href' => '/admin/reports.php',
-                        'pattern' => '/admin/reports.php',
-                        'icon' => 'bi-bar-chart',
-                        'roles' => array('super_admin', 'admin', 'finance'),
-                    ),
-                    array(
-                        'label' => 'Customers',
-                        'href' => '/admin/users.php',
-                        'pattern' => '/admin/users.php',
-                        'icon' => 'bi-people',
-                        'roles' => array('super_admin', 'admin'),
-                    ),
-                    array(
-                        'label' => 'Destek Talepleri',
-                        'href' => '/admin/support.php',
-                        'pattern' => '/admin/support.php',
-                        'icon' => 'bi-life-preserver',
-                        'roles' => array('super_admin', 'admin', 'support'),
-                    ),
-                ),
-            ),
-            array(
-                'heading' => 'Urun Islemleri',
-                'items' => array(
-                    array(
-                        'label' => 'Urunler',
-                        'href' => '/admin/products.php',
-                        'pattern' => '/admin/products.php',
-                        'icon' => 'bi-box-seam',
-                        'roles' => array('super_admin', 'admin', 'content'),
-                    ),
-                    array(
-                        'label' => 'Kategoriler',
-                        'href' => '/admin/categories.php',
-                        'pattern' => '/admin/categories.php',
-                        'icon' => 'bi-diagram-3',
-                        'roles' => array('super_admin', 'admin', 'content'),
-                    ),
-                    array(
-                        'label' => 'Paketler',
-                        'href' => '/admin/packages.php',
-                        'pattern' => '/admin/packages.php',
-                        'icon' => 'bi-box',
-                        'roles' => array('super_admin', 'admin'),
-                    ),
-                    array(
-                        'label' => 'Siparisler',
-                        'icon' => 'bi-bag-check',
-                        'roles' => array('super_admin', 'admin', 'support'),
-                        'children' => array(
-                            array(
-                                'label' => 'Paket Siparisleri',
-                                'href' => '/admin/orders.php',
-                                'pattern' => '/admin/orders.php',
-                                'roles' => array('super_admin', 'admin', 'support'),
-                                'badge' => isset($menuBadges['/admin/orders.php']) ? (int)$menuBadges['/admin/orders.php'] : 0,
-                            ),
-                            array(
-                                'label' => 'Urun Siparisleri',
-                                'href' => '/admin/product-orders.php',
-                                'pattern' => '/admin/product-orders.php',
-                                'roles' => array('super_admin', 'admin', 'support'),
-                                'badge' => isset($menuBadges['/admin/product-orders.php']) ? (int)$menuBadges['/admin/product-orders.php'] : 0,
-                            ),
-                        ),
-                    ),
-                    array(
-                        'label' => 'WooCommerce',
-                        'icon' => 'bi-cart3',
-                        'roles' => array('super_admin', 'admin', 'content'),
-                        'children' => array(
-                            array(
-                                'label' => 'CSV Ice Aktar',
-                                'href' => '/admin/woocommerce-import.php',
-                                'pattern' => '/admin/woocommerce-import.php',
-                                'roles' => array('super_admin', 'admin', 'content'),
-                            ),
-                            array(
-                                'label' => 'CSV Dis Aktar',
-                                'href' => '/admin/woocommerce-export.php',
-                                'pattern' => '/admin/woocommerce-export.php',
-                                'roles' => array('super_admin', 'admin', 'content'),
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-            array(
-                'heading' => 'Entegrasyonlar',
-                'items' => array(
-                    array(
-                        'label' => 'Entegrasyonlar',
-                        'href' => '/admin/integrations-providers.php',
-                        'pattern' => '/admin/integrations-(providers|dalle|contentbot)\\.php',
-                        'icon' => 'bi-plug',
-                        'roles' => array('super_admin', 'admin', 'support'),
-                        'children' => array(
-                            array(
-                                'label' => 'Saglayici Entegrasyonlar',
-                                'href' => '/admin/integrations-providers.php',
-                                'pattern' => '/admin/integrations-providers.php',
-                                'roles' => array('super_admin', 'admin', 'support'),
-                            ),
-                            array(
-                                'label' => 'Dall-e Yapay Zeka',
-                                'href' => '/admin/integrations-dalle.php',
-                                'pattern' => '/admin/integrations-dalle.php',
-                                'roles' => array('super_admin', 'admin', 'support'),
-                            ),
-                            array(
-                                'label' => 'Makale ve Yorum Botu',
-                                'href' => '/admin/integrations-contentbot.php',
-                                'pattern' => '/admin/integrations-contentbot.php',
-                                'roles' => array('super_admin', 'admin', 'support'),
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-            array(
-                'heading' => 'Denetim',
-                'items' => array(
-                    array(
-                        'label' => 'Aktivite Kayitlari',
-                        'href' => '/admin/activity-logs.php',
-                        'pattern' => '/admin/activity-logs.php',
-                        'icon' => 'bi-clipboard-data',
-                        'roles' => array('super_admin', 'admin'),
-                    ),
-                ),
-            ),
-        );
+        $menuSections = isset($GLOBALS['admin_menu_sections']) && is_array($GLOBALS['admin_menu_sections'])
+            ? $GLOBALS['admin_menu_sections']
+            : array();
 
-        $menuSections = array();
-        foreach ($adminSections as $section) {
-            $items = array();
-            foreach ($section['items'] as $item) {
-                $allowedRoles = isset($item['roles']) ? $item['roles'] : Auth::adminRoles();
-                $hasChildren = isset($item['children']) && is_array($item['children']) && $item['children'];
-
-                if ($hasChildren) {
-                    $visibleChildren = array();
-                    foreach ($item['children'] as $child) {
-                        $childRoles = isset($child['roles']) ? $child['roles'] : $allowedRoles;
-                        if (Auth::userHasRole($user, $childRoles)) {
-                            $visibleChildren[] = $child;
-                        }
+        if ($menuSections) {
+            $applyBadgeMap = function (array $items) use (&$applyBadgeMap, $menuBadges) {
+                $result = array();
+                foreach ($items as $item) {
+                    if (isset($item['href']) && isset($menuBadges[$item['href']])) {
+                        $item['badge'] = (int)$menuBadges[$item['href']];
                     }
-
-                    if ($visibleChildren) {
-                        $item['children'] = $visibleChildren;
-                        $items[] = $item;
-                    } elseif (Auth::userHasRole($user, $allowedRoles) && !empty($item['href'])) {
-                        unset($item['children']);
-                        $items[] = $item;
+                    if (!empty($item['children']) && is_array($item['children'])) {
+                        $item['children'] = $applyBadgeMap($item['children']);
                     }
-                } elseif (Auth::userHasRole($user, $allowedRoles)) {
-                    $items[] = $item;
+                    $result[] = $item;
+                }
+
+                return $result;
+            };
+
+            foreach ($menuSections as &$section) {
+                if (!empty($section['items'])) {
+                    $section['items'] = $applyBadgeMap($section['items']);
                 }
             }
-
-            if ($items) {
-                $section['items'] = $items;
-                $menuSections[] = $section;
-            }
+            unset($section);
         }
     } else {
         $menuSections = array();
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="tr">

@@ -15,17 +15,9 @@ class Currency
      * @param string $to
      * @return float
      */
-    public static function convert($amount, $from = 'USD', $to = 'USD')
+    public static function convert($amount, $from = 'TRY', $to = 'TRY')
     {
-        $from = strtoupper($from);
-        $to = strtoupper($to);
-
-        if ($from === $to) {
-            return (float)$amount;
-        }
-
-        $rate = self::getRate($from, $to);
-        return (float)$amount * $rate;
+        return (float)$amount;
     }
 
     /**
@@ -33,17 +25,10 @@ class Currency
      * @param string $currency
      * @return string
      */
-    public static function format($amount, $currency = 'USD')
+    public static function format($amount, $currency = 'TRY')
     {
-        $currency = strtoupper($currency);
-        $symbol = self::symbol($currency);
         $formatted = number_format((float)$amount, 2, ',', '.');
-
-        if ($currency === 'USD') {
-            $formatted = number_format((float)$amount, 2, '.', ',');
-        }
-
-        return $symbol . $formatted;
+        return self::symbol($currency) . $formatted;
     }
 
     /**
@@ -52,14 +37,7 @@ class Currency
      */
     public static function symbol($currency)
     {
-        $currency = strtoupper($currency);
-        switch ($currency) {
-            case 'TRY':
-                return '₺';
-            case 'USD':
-            default:
-                return '$';
-        }
+        return '₺';
     }
 
     /**
@@ -69,38 +47,7 @@ class Currency
      */
     public static function getRate($from, $to)
     {
-        $key = $from . '_' . $to;
-
-        if (isset(self::$rateCache[$key])) {
-            return self::$rateCache[$key];
-        }
-
-        $storedRate = Settings::get('currency_rate_' . $key);
-        $storedTimestamp = Settings::get('currency_rate_' . $key . '_updated');
-
-        if ($storedRate !== null && $storedTimestamp !== null) {
-            $age = time() - (int)$storedTimestamp;
-            if ($age < 3600) {
-                $rate = (float)$storedRate;
-                self::$rateCache[$key] = $rate;
-                return $rate;
-            }
-        }
-
-        $rate = self::fetchRate($from, $to);
-        if ($rate <= 0) {
-            if ($storedRate !== null) {
-                $rate = (float)$storedRate;
-            } else {
-                $rate = 1.0;
-            }
-        } else {
-            Settings::set('currency_rate_' . $key, (string)$rate);
-            Settings::set('currency_rate_' . $key . '_updated', (string)time());
-        }
-
-        self::$rateCache[$key] = $rate;
-        return $rate;
+        return 1.0;
     }
 
     /**
@@ -112,19 +59,7 @@ class Currency
      */
     public static function refreshRate($from, $to)
     {
-        $from = strtoupper($from);
-        $to = strtoupper($to);
-
-        $key = $from . '_' . $to;
-
-        $rate = self::fetchRate($from, $to);
-        if ($rate > 0) {
-            Settings::set('currency_rate_' . $key, (string)$rate);
-            Settings::set('currency_rate_' . $key . '_updated', (string)time());
-            self::$rateCache[$key] = $rate;
-        }
-
-        return $rate;
+        return 1.0;
     }
 
     /**
@@ -134,57 +69,7 @@ class Currency
      */
     private static function fetchRate($from, $to)
     {
-        $endpoints = array(
-            array(
-                'type' => 'convert',
-                'url' => 'https://api.exchangerate.host/convert?from=' . urlencode($from) . '&to=' . urlencode($to),
-            ),
-            array(
-                'type' => 'latest',
-                'url' => 'https://open.er-api.com/v6/latest/' . urlencode($from),
-            ),
-            array(
-                'type' => 'latest',
-                'url' => 'https://api.exchangerate-api.com/v4/latest/' . urlencode($from),
-            ),
-        );
-
-        foreach ($endpoints as $endpoint) {
-            $response = self::httpGet($endpoint['url']);
-            if (!$response) {
-                continue;
-            }
-
-            $data = json_decode($response, true);
-            if (!is_array($data)) {
-                continue;
-            }
-
-            if ($endpoint['type'] === 'convert') {
-                if (isset($data['info']) && isset($data['info']['rate'])) {
-                    $rate = (float)$data['info']['rate'];
-                    if ($rate > 0) {
-                        return $rate;
-                    }
-                }
-
-                if (isset($data['result'])) {
-                    $rate = (float)$data['result'];
-                    if ($rate > 0) {
-                        return $rate;
-                    }
-                }
-            } else {
-                if (isset($data['rates']) && isset($data['rates'][strtoupper($to)])) {
-                    $rate = (float)$data['rates'][strtoupper($to)];
-                    if ($rate > 0) {
-                        return $rate;
-                    }
-                }
-            }
-        }
-
-        return 0.0;
+        return 1.0;
     }
 
     /**

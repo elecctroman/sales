@@ -71,7 +71,7 @@ class PackageOrderService
             $message .= "Kayıtlı şifrenizle giriş yapabilirsiniz.\n";
         }
 
-        $message .= "\nSatın aldığınız paket: {$order['package_name']}\nTutar: " . Helpers::formatCurrency((float)$order['price'], 'USD') . "\n\nİyi çalışmalar.";
+        $message .= "\nSatın aldığınız paket: {$order['package_name']}\nTutar: " . Helpers::formatCurrency((float)$order['price'], 'TRY') . "\n\nİyi çalışmalar.";
 
         Mailer::send($order['email'], 'Customerlik Hesabınız Hazır', $message);
 
@@ -79,7 +79,7 @@ class PackageOrderService
             "Yeni teslimat tamamlandı!\nCustomer: %s\nPaket: %s\nTutar: %s",
             $order['name'],
             $order['package_name'],
-            Helpers::formatCurrency((float)$order['price'], 'USD')
+            Helpers::formatCurrency((float)$order['price'], 'TRY')
         ));
 
         return [

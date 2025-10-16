@@ -3,7 +3,6 @@ require __DIR__ . '/../bootstrap.php';
 
 use App\Auth;
 use App\AuditLog;
-use App\Currency;
 use App\FeatureToggle;
 use App\Helpers;
 use App\Settings;
@@ -39,13 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!Helpers::verifyCsrf($token)) {
         $errors[] = 'Session token could not be verified. Please refresh the page and try again.';
-    } elseif ($action === 'refresh_rate') {
-        $rate = Currency::refreshRate('TRY', 'USD');
-        if ($rate > 0) {
-            $success = 'Exchange rate refreshed successfully.';
-        } else {
-            $errors[] = 'Exchange rate service could not be reached.';
-        }
     } else {
         $siteName = isset($_POST['site_name']) ? trim($_POST['site_name']) : '';
         $siteTagline = isset($_POST['site_tagline']) ? trim($_POST['site_tagline']) : '';
@@ -95,10 +87,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-
-$rate = Currency::getRate('TRY', 'USD');
-$tryPerUsd = $rate > 0 ? 1 / $rate : null;
-$rateUpdatedAt = Settings::get('currency_rate_TRY_USD_updated');
 
 Helpers::setPageTitle('General Settings');
 
@@ -156,17 +144,9 @@ include __DIR__ . '/templates/header.php';
                             <input type="number" name="pricing_commission_rate" step="0.01" min="0" class="form-control" value="<?= Helpers::sanitize(isset($current['pricing_commission_rate']) ? $current['pricing_commission_rate'] : '0') ?>">
                         </div>
                         <div class="col-md-8">
-                            <div class="currency-card p-3 bg-light rounded">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Live Rate</strong>
-                                        <div class="text-muted small">
-                                            1 USD ≈ <?= $tryPerUsd ? Helpers::sanitize(number_format($tryPerUsd, 4, '.', ',')) : '-' ?> TRY
-                                        </div>
-                                        <div class="text-muted small">Last update: <?= $rateUpdatedAt ? Helpers::sanitize(date('d.m.Y H:i', (int)$rateUpdatedAt)) : '-' ?></div>
-                                    </div>
-                                    <button type="submit" name="action" value="refresh_rate" class="btn btn-outline-primary btn-sm">Refresh</button>
-                                </div>
+                            <div class="alert alert-info mb-0">
+                                <div class="small mb-1"><strong>Bilgi:</strong> Fiyatlandırma ve komisyon hesaplamaları yalnızca Türk Lirası (TL) üzerinden yapılır.</div>
+                                <div class="small mb-0">Ek döviz kurları tutulmaz veya güncellenmez.</div>
                             </div>
                         </div>
                     </div>

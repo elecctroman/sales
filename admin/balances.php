@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = 'Bakiye talebi güncellendi.';
 
             $message = $status === 'approved'
-                ? "Bakiye yükleme talebiniz onaylandı. Toplam: " . Helpers::formatCurrency((float)$request['amount'], 'USD')
+                ? "Bakiye yükleme talebiniz onaylandı. Toplam: " . Helpers::formatCurrency((float)$request['amount'], 'TRY')
                 : "Bakiye yükleme talebiniz reddedildi.";
 
             if ($adminNote) {
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Telegram::notify(sprintf(
                     "Yeni bakiye yüklemesi tamamlandı!\nCustomer: %s\nTutar: %s",
                     $request['name'],
-                    Helpers::formatCurrency((float)$request['amount'], 'USD')
+                    Helpers::formatCurrency((float)$request['amount'], 'TRY')
                 ));
             }
 

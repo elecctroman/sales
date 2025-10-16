@@ -9,7 +9,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $orderReference = isset($payload['order_id']) ? trim($payload['order_id']) : '';
     $items = isset($payload['items']) && is_array($payload['items']) ? $payload['items'] : array();
     $customer = isset($payload['customer']) && is_array($payload['customer']) ? $payload['customer'] : array();
-    $currency = isset($payload['currency']) ? $payload['currency'] : 'USD';
+    $currencyInput = isset($payload['currency']) ? trim((string)$payload['currency']) : '';
+    $currency = $currencyInput !== '' ? strtoupper($currencyInput) : 'TRY';
+
+    if ($currency !== 'TRY') {
+        json_response(array('success' => false, 'error' => 'currency alanı yalnızca TRY olabilir.'), 422);
+    }
 
     if ($orderReference === '') {
         json_response(array('success' => false, 'error' => 'order_id alanı zorunludur.'), 422);
