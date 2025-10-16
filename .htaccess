@@ -19,6 +19,7 @@ RewriteCond %{THE_REQUEST} \s/+page\.php[?\s] [NC]
 RewriteRule ^page\.php$ page? [R=301,L]
 
 RewriteRule ^account/?$ account.php [L,QSA]
+RewriteRule ^blog/([^/]+)/?$ blog.php?slug=$1 [L,QSA]
 RewriteRule ^blog/?$ blog.php [L,QSA]
 RewriteRule ^page/([^/]+)/?$ page.php?slug=$1 [L,QSA]
 RewriteRule ^kategori/?$ kategori.php [L,QSA]

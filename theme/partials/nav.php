@@ -1,17 +1,18 @@
 <?php
 use App\Helpers;
-$navCategories = isset($GLOBALS['theme_nav_categories']) ? $GLOBALS['theme_nav_categories'] : array();
+
+$navItems = isset($GLOBALS['theme_nav_categories']) ? $GLOBALS['theme_nav_categories'] : array();
 $cartSummary = isset($GLOBALS['theme_cart_summary']) ? $GLOBALS['theme_cart_summary'] : array();
 $cartTotals = isset($cartSummary['totals']) ? $cartSummary['totals'] : array();
 $cartCount = isset($cartTotals['total_quantity']) ? (int)$cartTotals['total_quantity'] : 0;
 
-if (!$navCategories) {
-    $navCategories = array(
-        array('id' => 1, 'name' => 'PUBG', 'slug' => 'pubg', 'icon' => '', 'image' => '', 'children' => array()),
-        array('id' => 2, 'name' => 'Valorant', 'slug' => 'valorant', 'icon' => '', 'image' => '', 'children' => array()),
-        array('id' => 3, 'name' => 'Windows', 'slug' => 'windows', 'icon' => '', 'image' => '', 'children' => array()),
-        array('id' => 4, 'name' => 'Semrush', 'slug' => 'semrush', 'icon' => '', 'image' => '', 'children' => array()),
-        array('id' => 5, 'name' => 'Adobe', 'slug' => 'adobe', 'icon' => '', 'image' => '', 'children' => array()),
+if (!$navItems) {
+    $navItems = array(
+        array('title' => 'PUBG', 'url' => Helpers::categoryUrl('pubg'), 'type' => 'category', 'icon' => '', 'image' => '', 'children' => array()),
+        array('title' => 'Valorant', 'url' => Helpers::categoryUrl('valorant'), 'type' => 'category', 'icon' => '', 'image' => '', 'children' => array()),
+        array('title' => 'Windows', 'url' => Helpers::categoryUrl('windows'), 'type' => 'category', 'icon' => '', 'image' => '', 'children' => array()),
+        array('title' => 'Semrush', 'url' => Helpers::categoryUrl('semrush'), 'type' => 'category', 'icon' => '', 'image' => '', 'children' => array()),
+        array('title' => 'Adobe', 'url' => Helpers::categoryUrl('adobe'), 'type' => 'category', 'icon' => '', 'image' => '', 'children' => array()),
     );
 }
 
@@ -63,7 +64,7 @@ foreach ($notifications as $notificationItem) {
             </button>
         </form>
         <div class="site-header__actions">
-            <a href="/cart.php" class="site-header__icon-btn site-header__icon-btn--badge" data-cart-button aria-label="Sepeti ac">
+            <a href="/cart.php" class="site-header__icon-btn site-header__icon-btn--badge" data-cart-button aria-label="Sepeti aç">
                 <span class="material-icons">shopping_cart</span>
                 <span class="site-header__badge<?= $cartCount > 0 ? '' : ' is-hidden' ?>" data-cart-count><?= (int)$cartCount ?></span>
             </a>
@@ -76,7 +77,7 @@ foreach ($notifications as $notificationItem) {
                 <div class="site-header__notification-panel" data-notification-panel>
                     <div class="site-header__notification-header">
                         <span>Bildirimler</span>
-                        <button type="button" class="site-header__notification-action" data-notification-mark-all>Hepsini okundu isaretle</button>
+                        <button type="button" class="site-header__notification-action" data-notification-mark-all>Hepsini okundu işaretle</button>
                     </div>
                     <div class="site-header__notification-list" data-notification-list>
                         <?php if (!$notifications): ?>
@@ -92,7 +93,7 @@ foreach ($notifications as $notificationItem) {
                                         <?php endif; ?>
                                     </div>
                                     <?php if (!empty($notification['link'])): ?>
-                                        <a class="site-header__notification-link" href="<?= htmlspecialchars($notification['link'], ENT_QUOTES, 'UTF-8') ?>">Incele</a>
+                                        <a class="site-header__notification-link" href="<?= htmlspecialchars($notification['link'], ENT_QUOTES, 'UTF-8') ?>">İncele</a>
                                     <?php endif; ?>
                                 </article>
                             <?php endforeach; ?>
@@ -119,7 +120,7 @@ foreach ($notifications as $notificationItem) {
                         <span class="site-header__user-balance">Bakiye: <?= htmlspecialchars($userFormattedBalance, ENT_QUOTES, 'UTF-8') ?> TL</span>
                     </span>
                 </a>
-                <a href="/logout.php" class="site-header__pill site-header__pill--primary site-header__pill--icon-only" aria-label="Cikis Yap">
+                <a href="/logout.php" class="site-header__pill site-header__pill--primary site-header__pill--icon-only" aria-label="Çıkış Yap">
                     <span class="material-icons">logout</span>
                 </a>
             <?php endif; ?>
@@ -127,23 +128,21 @@ foreach ($notifications as $notificationItem) {
     </div>
     <nav class="site-header__nav">
         <ul>
-            <?php foreach ($navCategories as $category): ?>
+            <?php foreach ($navItems as $item): ?>
                 <?php
-                    $slug = !empty($category['slug']) ? $category['slug'] : 'category-' . (int)$category['id'];
-                    $path = isset($category['path']) && $category['path'] !== '' ? (string)$category['path'] : $slug;
-                    $categoryUrl = isset($category['url']) && $category['url'] !== '' ? (string)$category['url'] : Helpers::categoryUrl($path);
-                    $hasChildren = !empty($category['children']);
-                    $iconClass = isset($category['icon']) ? trim((string)$category['icon']) : '';
-                    $image = isset($category['image']) ? trim((string)$category['image']) : '';
-                    $firstLetter = strtoupper(substr($category['name'], 0, 1));
+                    $label = isset($item['title']) ? (string)$item['title'] : (isset($item['name']) ? (string)$item['name'] : 'Menü');
+                    $url = isset($item['url']) && $item['url'] !== '' ? (string)$item['url'] : '#';
+                    $iconClass = isset($item['icon']) ? trim((string)$item['icon']) : '';
+                    $image = isset($item['image']) ? trim((string)$item['image']) : '';
+                    $children = isset($item['children']) && is_array($item['children']) ? $item['children'] : array();
+                    $firstLetter = strtoupper(substr($label, 0, 1));
                     $iconifyName = '';
-
                     if ($iconClass !== '' && strpos($iconClass, 'iconify:') === 0) {
                         $iconifyName = substr($iconClass, 8);
                     }
                 ?>
-                <li class="site-header__nav-item<?= $hasChildren ? ' has-children' : '' ?>">
-                    <a href="<?= htmlspecialchars($categoryUrl, ENT_QUOTES, 'UTF-8') ?>" class="site-header__nav-link">
+                <li class="site-header__nav-item<?= $children ? ' has-children' : '' ?>">
+                    <a href="<?= htmlspecialchars($url, ENT_QUOTES, 'UTF-8') ?>" class="site-header__nav-link"<?= isset($item['target']) && $item['target'] === '_blank' ? ' target="_blank" rel="noopener"' : '' ?>>
                         <span class="site-header__nav-avatar">
                             <?php if ($iconClass !== ''): ?>
                                 <?php if ($iconifyName !== ''): ?>
@@ -153,7 +152,7 @@ foreach ($notifications as $notificationItem) {
                                 <?php endif; ?>
                             <?php elseif ($image !== ''): ?>
                                 <img src="<?= htmlspecialchars($image, ENT_QUOTES, 'UTF-8') ?>"
-                                     alt="<?= htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8') ?>"
+                                     alt="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
                                      loading="lazy"
                                      decoding="async"
                                      width="40"
@@ -162,21 +161,20 @@ foreach ($notifications as $notificationItem) {
                                 <?= htmlspecialchars($firstLetter, ENT_QUOTES, 'UTF-8') ?>
                             <?php endif; ?>
                         </span>
-                        <span><?= htmlspecialchars($category['name']) ?></span>
-                        <?php if ($hasChildren): ?>
+                        <span><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+                        <?php if ($children): ?>
                             <span class="site-header__nav-caret material-icons">expand_more</span>
                         <?php endif; ?>
                     </a>
-                    <?php if ($hasChildren): ?>
+                    <?php if ($children): ?>
                         <div class="site-header__nav-dropdown">
-                            <?php foreach ($category['children'] as $child): ?>
+                            <?php foreach ($children as $child): ?>
                                 <?php
-                                    $childSlug = isset($child['slug']) && $child['slug'] !== '' ? (string)$child['slug'] : ('category-' . (int)$child['id']);
-                                    $childPath = isset($child['path']) && $child['path'] !== '' ? (string)$child['path'] : $childSlug;
-                                    $childUrl = isset($child['url']) && $child['url'] !== '' ? (string)$child['url'] : Helpers::categoryUrl($childPath);
+                                    $childLabel = isset($child['title']) ? (string)$child['title'] : (isset($child['name']) ? (string)$child['name'] : 'Alt Menü');
+                                    $childUrl = isset($child['url']) && $child['url'] !== '' ? (string)$child['url'] : '#';
                                 ?>
-                                <a href="<?= htmlspecialchars($childUrl, ENT_QUOTES, 'UTF-8') ?>" class="site-header__nav-dropdown-link">
-                                    <?= htmlspecialchars($child['name']) ?>
+                                <a href="<?= htmlspecialchars($childUrl, ENT_QUOTES, 'UTF-8') ?>" class="site-header__nav-dropdown-link"<?= isset($child['target']) && $child['target'] === '_blank' ? ' target="_blank" rel="noopener"' : '' ?>>
+                                    <?= htmlspecialchars($childLabel, ENT_QUOTES, 'UTF-8') ?>
                                 </a>
                             <?php endforeach; ?>
                         </div>

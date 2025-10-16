@@ -17,6 +17,12 @@ $lastName = $nameParts ? implode(' ', $nameParts) : '';
 $email = isset($userData['email']) ? (string)$userData['email'] : '';
 $balanceValue = isset($userData['balance']) ? (float)$userData['balance'] : 0.0;
 $balanceFormatted = Helpers::formatCurrency($balanceValue, 'TRY');
+$discountValue = isset($cartTotals['discount_value']) ? (float)$cartTotals['discount_value'] : 0.0;
+$discountFormatted = isset($cartTotals['discount_formatted']) ? $cartTotals['discount_formatted'] : Helpers::formatCurrency(0, Helpers::activeCurrency());
+$grandTotalFormatted = isset($cartTotals['grand_total_formatted']) ? $cartTotals['grand_total_formatted'] : $subtotalFormatted;
+$appliedCoupon = isset($cartTotals['coupon']) && is_array($cartTotals['coupon']) ? $cartTotals['coupon'] : null;
+$couponNotice = Helpers::getFlash('cart_notice', '');
+$isLoggedInCart = isset($isLoggedIn) ? (bool)$isLoggedIn : false;
 
 $paymentMethods = array(
     'card' => 'Kredi / Banka Karti',
@@ -92,6 +98,11 @@ $paymentMethods = array(
             <div class="cart__panel-header">
                 <h2>Sepet Ozeti</h2>
             </div>
+            <?php if ($couponNotice !== ''): ?>
+                <div class="cart-alert">
+                    <?= htmlspecialchars($couponNotice) ?>
+                </div>
+            <?php endif; ?>
             <dl class="cart-summary">
                 <div>
                     <dt>Urun Sayisi</dt>
@@ -101,11 +112,46 @@ $paymentMethods = array(
                     <dt>Toplam Adet</dt>
                     <dd data-cart-total-quantity><?= $quantityCount ?></dd>
                 </div>
-                <div class="cart-summary__total">
-                    <dt>Toplam</dt>
+                <div class="cart-summary__subtotal">
+                    <dt>Ara Toplam</dt>
                     <dd data-cart-subtotal><?= htmlspecialchars($subtotalFormatted) ?></dd>
                 </div>
+                <?php if ($appliedCoupon): ?>
+                    <div class="cart-summary__discount">
+                        <dt>Kupon (<?= htmlspecialchars($appliedCoupon['code']) ?>)</dt>
+                        <dd>-<?= htmlspecialchars($discountFormatted) ?></dd>
+                    </div>
+                <?php endif; ?>
+                <div class="cart-summary__total">
+                    <dt>Odenecek Tutar</dt>
+                    <dd data-cart-grand-total><?= htmlspecialchars($grandTotalFormatted) ?></dd>
+                </div>
             </dl>
+
+            <div class="cart-coupon">
+                <?php if ($appliedCoupon): ?>
+                    <div class="cart-coupon__applied">
+                        <div class="cart-coupon__details">
+                            <span class="cart-coupon__code"><?= htmlspecialchars($appliedCoupon['code']) ?></span>
+                            <?php if (!empty($appliedCoupon['label'])): ?>
+                                <span class="cart-coupon__label"><?= htmlspecialchars($appliedCoupon['label']) ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <button type="button" class="cart-coupon__remove" data-cart-coupon-remove>Kuponu Kaldir</button>
+                    </div>
+                <?php else: ?>
+                    <form class="cart-coupon__form" data-cart-coupon-form>
+                        <label class="cart-coupon__input">
+                            <span class="visually-hidden">Kupon kodu</span>
+                            <input type="text" name="coupon_code" placeholder="Kupon kodu" required<?= $isLoggedInCart ? '' : ' disabled' ?>>
+                        </label>
+                        <button type="submit" class="cart-coupon__apply"<?= $isLoggedInCart ? '' : ' disabled' ?>>Kuponu Uygula</button>
+                    </form>
+                    <?php if (!$isLoggedInCart): ?>
+                        <p class="cart-coupon__hint">Kupon kullanmak icin giris yapmalisiniz.</p>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
 
             <div class="cart-summary__actions">
                 <button type="button" class="cart-summary__button cart-summary__button--primary" data-checkout-trigger data-method="card"<?= $hasItems ? '' : ' disabled' ?>>

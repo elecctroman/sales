@@ -58,6 +58,29 @@ class Notification
      * @param int $limit
      * @return array
      */
+    /**
+     * Normalise a notification record.
+     *
+     * @param array $row
+     * @return array
+     */
+    private static function normaliseRow(array $row): array
+    {
+        return array(
+            'id' => isset($row['id']) ? (int)$row['id'] : 0,
+            'title' => isset($row['title']) ? (string)$row['title'] : '',
+            'message' => isset($row['message']) ? (string)$row['message'] : '',
+            'link' => isset($row['link']) && $row['link'] !== null ? (string)$row['link'] : '',
+            'scope' => isset($row['scope']) ? (string)$row['scope'] : 'global',
+            'user_id' => isset($row['user_id']) ? (int)$row['user_id'] : null,
+            'status' => isset($row['status']) ? (string)$row['status'] : 'draft',
+            'publish_at' => isset($row['publish_at']) ? $row['publish_at'] : null,
+            'expire_at' => isset($row['expire_at']) ? $row['expire_at'] : null,
+            'created_at' => isset($row['created_at']) ? $row['created_at'] : null,
+            'updated_at' => isset($row['updated_at']) ? $row['updated_at'] : null,
+        );
+    }
+
     public static function forUser(?int $userId, int $limit = 12): array
     {
         self::ensureTables();
@@ -141,7 +164,38 @@ class Notification
             ORDER BY n.created_at DESC
         ');
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: array();
+        $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : array();
+        $normalised = array();
+        foreach ($rows as $row) {
+            $item = self::normaliseRow($row);
+            $item['user_name'] = isset($row['user_name']) ? (string)$row['user_name'] : '';
+            $item['user_email'] = isset($row['user_email']) ? (string)$row['user_email'] : '';
+            $normalised[] = $item;
+        }
+
+        return $normalised;
+    }
+
+    /**
+     * Find a single notification.
+     *
+     * @param int $id
+     * @return array|null
+     */
+    public static function find(int $id): ?array
+    {
+        if ($id <= 0) {
+            return null;
+        }
+
+        self::ensureTables();
+
+        $pdo = Database::connection();
+        $stmt = $pdo->prepare('SELECT * FROM ' . self::TABLE . ' WHERE id = :id LIMIT 1');
+        $stmt->execute(array('id' => $id));
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ? self::normaliseRow($row) : null;
     }
 
     /**
@@ -150,25 +204,79 @@ class Notification
      */
     public static function create(array $payload): int
     {
+        $saved = self::save($payload);
+
+        return isset($saved['id']) ? (int)$saved['id'] : 0;
+    }
+
+    /**
+     * Create or update a notification record.
+     *
+     * @param array $payload
+     * @return array
+     */
+    public static function save(array $payload): array
+    {
         self::ensureTables();
 
         $pdo = Database::connection();
-        $stmt = $pdo->prepare('
-            INSERT INTO ' . self::TABLE . ' (title, message, link, scope, user_id, status, publish_at, expire_at, created_at, updated_at)
-            VALUES (:title, :message, :link, :scope, :user_id, :status, :publish_at, :expire_at, NOW(), NOW())
-        ');
-        $stmt->execute(array(
-            'title' => $payload['title'],
-            'message' => $payload['message'],
-            'link' => $payload['link'] ?? null,
-            'scope' => $payload['scope'] ?? 'global',
-            'user_id' => $payload['scope'] === 'user' ? ($payload['user_id'] ?? null) : null,
-            'status' => $payload['status'] ?? 'published',
-            'publish_at' => $payload['publish_at'] ?? date('Y-m-d H:i:s'),
-            'expire_at' => $payload['expire_at'] ?? null,
-        ));
 
-        return (int)$pdo->lastInsertId();
+        $id = isset($payload['id']) ? (int)$payload['id'] : 0;
+        $title = isset($payload['title']) ? trim((string)$payload['title']) : '';
+        $message = isset($payload['message']) ? trim((string)$payload['message']) : '';
+        $scopeInput = isset($payload['scope']) ? (string)$payload['scope'] : 'global';
+        $scope = in_array($scopeInput, array('global', 'user'), true) ? $scopeInput : 'global';
+        $statusInput = isset($payload['status']) ? (string)$payload['status'] : 'draft';
+        $status = in_array($statusInput, array('draft', 'published', 'archived'), true) ? $statusInput : 'draft';
+        $link = isset($payload['link']) ? trim((string)$payload['link']) : '';
+        $publishAt = isset($payload['publish_at']) ? trim((string)$payload['publish_at']) : '';
+        $expireAt = isset($payload['expire_at']) ? trim((string)$payload['expire_at']) : '';
+
+        if ($title === '' || $message === '') {
+            throw new \InvalidArgumentException('Bildirim başlığı ve mesajı zorunludur.');
+        }
+
+        $userId = null;
+        if ($scope === 'user') {
+            $userId = isset($payload['user_id']) ? (int)$payload['user_id'] : 0;
+            if ($userId <= 0) {
+                throw new \InvalidArgumentException('Kullanıcı hedefli bildirimler için kullanıcı seçmelisiniz.');
+            }
+        }
+
+        $link = $link !== '' ? $link : null;
+        $publishAt = $publishAt !== '' ? $publishAt : ($status === 'published' ? date('Y-m-d H:i:s') : null);
+        $expireAt = $expireAt !== '' ? $expireAt : null;
+
+        if ($id > 0) {
+            $stmt = $pdo->prepare('UPDATE ' . self::TABLE . ' SET title = :title, message = :message, link = :link, scope = :scope, user_id = :user_id, status = :status, publish_at = :publish_at, expire_at = :expire_at, updated_at = NOW() WHERE id = :id LIMIT 1');
+            $stmt->execute(array(
+                'title' => $title,
+                'message' => $message,
+                'link' => $link,
+                'scope' => $scope,
+                'user_id' => $scope === 'user' ? $userId : null,
+                'status' => $status,
+                'publish_at' => $publishAt,
+                'expire_at' => $expireAt,
+                'id' => $id,
+            ));
+        } else {
+            $stmt = $pdo->prepare('INSERT INTO ' . self::TABLE . ' (title, message, link, scope, user_id, status, publish_at, expire_at, created_at, updated_at) VALUES (:title, :message, :link, :scope, :user_id, :status, :publish_at, :expire_at, NOW(), NOW())');
+            $stmt->execute(array(
+                'title' => $title,
+                'message' => $message,
+                'link' => $link,
+                'scope' => $scope,
+                'user_id' => $scope === 'user' ? $userId : null,
+                'status' => $status,
+                'publish_at' => $publishAt,
+                'expire_at' => $expireAt,
+            ));
+            $id = (int)$pdo->lastInsertId();
+        }
+
+        return self::find($id);
     }
 
     /**

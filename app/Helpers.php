@@ -422,15 +422,9 @@ class Helpers
      * @param string $baseCurrency
      * @return string
      */
-    public static function formatCurrency($amount, $baseCurrency = 'USD')
+    public static function formatCurrency($amount, $baseCurrency = 'TRY')
     {
-        $activeCurrency = self::activeCurrency();
-
-        if ($activeCurrency !== $baseCurrency) {
-            $amount = Currency::convert((float)$amount, $baseCurrency, $activeCurrency);
-        }
-
-        return Currency::format((float)$amount, $activeCurrency);
+        return Currency::format((float)$amount, self::activeCurrency());
     }
 
     /**
@@ -455,14 +449,13 @@ class Helpers
     public static function priceFromCostTry($costTry)
     {
         $cost = max(0.0, (float)$costTry);
-        $usd = Currency::convert($cost, 'TRY', 'USD');
         $rate = self::commissionRate();
 
         if ($rate > 0) {
-            $usd += $usd * ($rate / 100);
+            $cost += $cost * ($rate / 100);
         }
 
-        return round($usd, 2);
+        return round($cost, 2);
     }
 
     /**
@@ -478,9 +471,7 @@ class Helpers
             $price = $price / (1 + ($rate / 100));
         }
 
-        $costTry = Currency::convert($price, 'USD', 'TRY');
-
-        return round($costTry, 2);
+        return round($price, 2);
     }
 
     /**
@@ -708,6 +699,95 @@ class Helpers
         $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost');
 
         return $scheme . '://' . $host . $path;
+    }
+
+    /**
+     * Build a URL by replacing query string parameters while optionally preserving
+     * those from the current request.
+     *
+     * @param string $path
+     * @param array<string,mixed> $parameters
+     * @param array<string,mixed> $options
+     * @return string
+     */
+    public static function replaceQueryParameters($path, array $parameters = array(), array $options = array())
+    {
+        $defaults = array(
+            'preserve' => true,
+            'remove' => array(),
+            'absolute' => false,
+            'source' => null,
+        );
+
+        $options = array_merge($defaults, $options);
+        $source = $options['source'];
+        if (!is_array($source)) {
+            $source = $_GET;
+        }
+
+        $query = array();
+        if ($options['preserve'] === true) {
+            $query = is_array($source) ? $source : array();
+        } elseif (is_array($options['preserve'])) {
+            foreach ($options['preserve'] as $key) {
+                if (!is_string($key) || $key === '') {
+                    continue;
+                }
+                if (is_array($source) && array_key_exists($key, $source)) {
+                    $query[$key] = $source[$key];
+                }
+            }
+        }
+
+        $removeKeys = array();
+        if (is_array($options['remove'])) {
+            foreach ($options['remove'] as $key) {
+                if (!is_string($key) || $key === '') {
+                    continue;
+                }
+                $removeKeys[] = $key;
+            }
+        }
+
+        foreach ($removeKeys as $key) {
+            unset($query[$key]);
+        }
+
+        foreach ($parameters as $key => $value) {
+            $normalizedKey = is_int($key) ? (string)$key : trim((string)$key);
+            if ($normalizedKey === '') {
+                continue;
+            }
+
+            if ($value === null || $value === '') {
+                unset($query[$normalizedKey]);
+                continue;
+            }
+
+            $query[$normalizedKey] = $value;
+        }
+
+        ksort($query);
+        $queryString = $query ? '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986) : '';
+
+        $path = is_string($path) ? trim($path) : '';
+        if ($path === '') {
+            $path = '/';
+        }
+
+        if (stripos($path, 'http://') === 0 || stripos($path, 'https://') === 0) {
+            $url = $path . $queryString;
+        } else {
+            if ($path[0] !== '/') {
+                $path = '/' . ltrim($path, '/');
+            }
+            $url = $path . $queryString;
+            if (!empty($options['absolute'])) {
+                $url = self::absoluteUrl($url);
+            }
+        }
+
+        return $url;
     }
 
     /**

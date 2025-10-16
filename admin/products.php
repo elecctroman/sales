@@ -3,7 +3,6 @@ require __DIR__ . '/../bootstrap.php';
 
 use App\Auth;
 use App\AuditLog;
-use App\Currency;
 use App\Database;
 use App\Helpers;
 use App\Settings;
@@ -258,10 +257,6 @@ $categoryPath = function ($categoryId) use (&$categoryMap) {
 
 $products = $pdo->query('SELECT pr.*, cat.name AS category_name FROM products pr INNER JOIN categories cat ON pr.category_id = cat.id ORDER BY pr.created_at DESC')->fetchAll();
 
-$rate = Currency::getRate('TRY', 'USD');
-$tryPerUsd = $rate > 0 ? 1 / $rate : null;
-$rateUpdatedAt = Settings::get('currency_rate_TRY_USD_updated');
-
 $pageTitle = 'Ürünler';
 
 include __DIR__ . '/templates/header.php';
@@ -273,7 +268,7 @@ include __DIR__ . '/templates/header.php';
                 <h5 class="mb-0">Yeni Ürün</h5>
             </div>
             <div class="card-body">
-                <p class="text-muted small">Alış fiyatını TL olarak girin. Sistem güncel kur ve %<?= Helpers::sanitize(number_format(Helpers::commissionRate(), 2, ',', '.')) ?> komisyon oranını kullanarak USD satış fiyatını hesaplar.</p>
+                <p class="text-muted small">Alış fiyatını TL olarak girin. Sistem %<?= Helpers::sanitize(number_format(Helpers::commissionRate(), 2, ',', '.')) ?> komisyon oranını kullanarak satış fiyatını otomatik hesaplar.</p>
 
                 <?php if ($errors): ?>
                     <div class="alert alert-danger">
@@ -342,8 +337,8 @@ include __DIR__ . '/templates/header.php';
             </div>
             <div class="card-footer bg-white">
                 <div class="small text-muted">
-                    <div>Kur referansı: <?php if ($tryPerUsd): ?>1 USD ≈ <?= Helpers::sanitize(number_format($tryPerUsd, 2, ',', '.')) ?> ₺<?php else: ?>-<?php endif; ?></div>
-                    <div>Son güncelleme: <?php if ($rateUpdatedAt): ?><?= Helpers::sanitize(date('d.m.Y H:i', (int)$rateUpdatedAt)) ?><?php else: ?>-<?php endif; ?></div>
+                    <div>Satış fiyatı, girdiğiniz alış fiyatına belirtilen komisyon oranı eklenerek TL cinsinden hesaplanır.</div>
+                    <div>Komisyon ayarlarını Genel Ayarlar sayfasından güncelleyebilirsiniz.</div>
                 </div>
             </div>
         </div>
@@ -366,7 +361,7 @@ include __DIR__ . '/templates/header.php';
                                 <th>Ürün</th>
                                 <th>Kategori</th>
                                 <th>Alış Fiyatı (₺)</th>
-                                <th>Satış Fiyatı ($)</th>
+                                <th>Satış Fiyatı (₺)</th>
                                 <th>Durum</th>
                                 <th class="text-end">İşlemler</th>
                             </tr>
@@ -381,7 +376,7 @@ include __DIR__ . '/templates/header.php';
                                     </td>
                                     <td><?= Helpers::sanitize($categoryPath((int)$product['category_id'])) ?></td>
                                     <td><?= isset($product['cost_price_try']) ? Helpers::sanitize(number_format((float)$product['cost_price_try'], 2, ',', '.')) : '-' ?></td>
-                                    <td><?= Helpers::sanitize(number_format((float)$product['price'], 2, '.', ',')) ?></td>
+                                    <td><?= Helpers::sanitize(number_format((float)$product['price'], 2, ',', '.')) ?></td>
                                     <td>
                                         <?php if ($product['status'] === 'active'): ?>
                                             <span class="badge bg-success">Aktif</span>

@@ -10,7 +10,7 @@ Auth::requireRoles(array('super_admin', 'admin', 'finance'));
 
 $user = $_SESSION['user'];
 $pdo = Database::connection();
-$pageTitle = 'Yönetici Paneli';
+$pageTitle = 'YÃ¶netici Paneli';
 
 $totalCustomers = (int)$pdo->query("SELECT COUNT(*) AS total FROM users WHERE role NOT IN ('super_admin','admin','finance','support','content')")->fetchColumn();
 $pendingPackageOrders = (int)$pdo->query("SELECT COUNT(*) FROM package_orders WHERE status = 'pending'")->fetchColumn();
@@ -48,7 +48,7 @@ $chartConfig = json_encode(array(
 ), JSON_UNESCAPED_SLASHES);
 
 $inlineScripts = isset($GLOBALS['pageInlineScripts']) && is_array($GLOBALS['pageInlineScripts']) ? $GLOBALS['pageInlineScripts'] : array();
-$inlineScripts[] = 'document.addEventListener("DOMContentLoaded", function () {\n    var chartTarget = document.getElementById("adminOverviewChart");\n    if (!chartTarget) {\n        return;\n    }\n\n    var payload = ' . $chartConfig . ';\n    new Chart(chartTarget, {\n        type: "line",\n        data: {\n            labels: payload.labels,\n            datasets: [\n                {\n                    label: "Toplam Sipariş",\n                    data: payload.orders,\n                    borderColor: "#0d6efd",\n                    backgroundColor: "rgba(13,110,253,0.15)",\n                    tension: 0.3,\n                    fill: true,\n                    yAxisID: "y"\n                },\n                {\n                    label: "Gelir (USD)",\n                    data: payload.revenue,\n                    borderColor: "#198754",\n                    backgroundColor: "rgba(25,135,84,0.15)",\n                    tension: 0.3,\n                    fill: true,\n                    yAxisID: "y1"\n                },\n                {\n                    label: "Bakiye Kredileri",\n                    data: payload.credits,\n                    borderColor: "#0dcaf0",\n                    backgroundColor: "rgba(13,202,240,0.15)",\n                    tension: 0.3,\n                    fill: true,\n                    hidden: true,\n                    yAxisID: "y1"\n                },\n                {\n                    label: "Bakiye Borçları",\n                    data: payload.debits,\n                    borderColor: "#dc3545",\n                    backgroundColor: "rgba(220,53,69,0.15)",\n                    tension: 0.3,\n                    fill: true,\n                    hidden: true,\n                    yAxisID: "y1"\n                }\n            ]\n        },\n        options: {\n            responsive: true,\n            interaction: {\n                mode: "index",\n                intersect: false\n            },\n            stacked: false,\n            plugins: {\n                legend: { position: "bottom" }\n            },\n            scales: {\n                y: {\n                    type: "linear",\n                    display: true,\n                    position: "left",\n                    beginAtZero: true\n                },\n                y1: {\n                    type: "linear",\n                    display: true,\n                    position: "right",\n                    beginAtZero: true,\n                    grid: { drawOnChartArea: false }\n                }\n            }\n        }\n    });\n});';
+$inlineScripts[] = 'document.addEventListener("DOMContentLoaded", function () {\n    var chartTarget = document.getElementById("adminOverviewChart");\n    if (!chartTarget) {\n        return;\n    }\n\n    var payload = ' . $chartConfig . ';\n    new Chart(chartTarget, {\n        type: "line",\n        data: {\n            labels: payload.labels,\n            datasets: [\n                {\n                    label: "Toplam Sipariş",\n                    data: payload.orders,\n                    borderColor: "#0d6efd",\n                    backgroundColor: "rgba(13,110,253,0.15)",\n                    tension: 0.3,\n                    fill: true,\n                    yAxisID: "y"\n                },\n                {\n                    label: "Gelir (TL)",\n                    data: payload.revenue,\n                    borderColor: "#198754",\n                    backgroundColor: "rgba(25,135,84,0.15)",\n                    tension: 0.3,\n                    fill: true,\n                    yAxisID: "y1"\n                },\n                {\n                    label: "Bakiye Kredileri",\n                    data: payload.credits,\n                    borderColor: "#0dcaf0",\n                    backgroundColor: "rgba(13,202,240,0.15)",\n                    tension: 0.3,\n                    fill: true,\n                    hidden: true,\n                    yAxisID: "y1"\n                },\n                {\n                    label: "Bakiye Borçları",\n                    data: payload.debits,\n                    borderColor: "#dc3545",\n                    backgroundColor: "rgba(220,53,69,0.15)",\n                    tension: 0.3,\n                    fill: true,\n                    hidden: true,\n                    yAxisID: "y1"\n                }\n            ]\n        },\n        options: {\n            responsive: true,\n            interaction: {\n                mode: "index",\n                intersect: false\n            },\n            stacked: false,\n            plugins: {\n                legend: { position: "bottom" }\n            },\n            scales: {\n                y: {\n                    type: "linear",\n                    display: true,\n                    position: "left",\n                    beginAtZero: true\n                },\n                y1: {\n                    type: "linear",\n                    display: true,\n                    position: "right",\n                    beginAtZero: true,\n                    grid: { drawOnChartArea: false }\n                }\n            }\n        }\n    });\n});';
 $GLOBALS['pageInlineScripts'] = $inlineScripts;
 
 include __DIR__ . '/templates/header.php';
@@ -59,7 +59,7 @@ include __DIR__ . '/templates/header.php';
             <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
                     <h4 class="mb-1"><?= Helpers::sanitize('Merhaba') ?>, <?= Helpers::sanitize($user['name']) ?></h4>
-                    <p class="text-muted mb-0"><?= Helpers::sanitize('Sistemi buradan y�netebilir, sat�� s�re�lerini takip edebilirsiniz.') ?></p>
+                    <p class="text-muted mb-0"><?= Helpers::sanitize('Sistemi buradan ynetebilir, sat srelerini takip edebilirsiniz.') ?></p>
                 </div>
                 <span class="badge bg-success rounded-pill fs-6"><?= Helpers::sanitize('Toplam Bakiye') ?>: <?= Helpers::sanitize(Helpers::formatCurrency((float)$user['balance'])) ?></span>
             </div>
@@ -68,7 +68,7 @@ include __DIR__ . '/templates/header.php';
     <div class="col-12 col-lg-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <h6 class="text-uppercase text-muted">Toplam Kullanıcı</h6>
+                <h6 class="text-uppercase text-muted">Toplam KullanÄ±cÄ±</h6>
                 <h3 class="mb-0"><?= $totalCustomers ?></h3>
             </div>
         </div>
@@ -76,9 +76,9 @@ include __DIR__ . '/templates/header.php';
     <div class="col-12 col-lg-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <h6 class="text-uppercase text-muted">Bekleyen Sipariş</h6>
+                <h6 class="text-uppercase text-muted">Bekleyen SipariÅŸ</h6>
                 <h3 class="mb-0"><?= $pendingPackageOrders + $pendingProductOrders ?></h3>
-                <small class="text-muted">Paket: <?= $pendingPackageOrders ?> | Ürün: <?= $pendingProductOrders ?></small>
+                <small class="text-muted">Paket: <?= $pendingPackageOrders ?> | ÃœrÃ¼n: <?= $pendingProductOrders ?></small>
             </div>
         </div>
     </div>
@@ -93,7 +93,7 @@ include __DIR__ . '/templates/header.php';
     <div class="col-12 col-lg-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <h6 class="text-uppercase text-muted">Açık Destek</h6>
+                <h6 class="text-uppercase text-muted">AÃ§Ä±k Destek</h6>
                 <h3 class="mb-0"><?= $openTickets ?></h3>
             </div>
         </div>
@@ -101,7 +101,7 @@ include __DIR__ . '/templates/header.php';
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Aylık Performans</h5>
+                <h5 class="mb-0">AylÄ±k Performans</h5>
                 <small class="text-muted">Son 6 ay</small>
             </div>
             <div class="card-body">
@@ -112,22 +112,22 @@ include __DIR__ . '/templates/header.php';
     <div class="col-12 col-xl-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white">
-                <h5 class="mb-0">Genel Özet</h5>
+                <h5 class="mb-0">Genel Ã–zet</h5>
             </div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <div class="border rounded p-3 h-100">
-                            <h6 class="text-uppercase text-muted">Siparişler</h6>
+                            <h6 class="text-uppercase text-muted">SipariÅŸler</h6>
                             <p class="fs-4 mb-1"><?= $monthlySummary['package_orders'] + $monthlySummary['product_orders'] ?></p>
-                            <small class="text-muted">Paket: <?= $monthlySummary['package_orders'] ?> · Ürün: <?= $monthlySummary['product_orders'] ?></small>
+                            <small class="text-muted">Paket: <?= $monthlySummary['package_orders'] ?> Â· ÃœrÃ¼n: <?= $monthlySummary['product_orders'] ?></small>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="border rounded p-3 h-100">
                             <h6 class="text-uppercase text-muted">Gelir</h6>
                             <p class="fs-4 mb-1"><?= Helpers::sanitize(Helpers::formatCurrency($monthlySummary['revenue'])) ?></p>
-                            <small class="text-muted">Tamamlanan siparişler</small>
+                            <small class="text-muted">Tamamlanan sipariÅŸler</small>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
@@ -139,9 +139,9 @@ include __DIR__ . '/templates/header.php';
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="border rounded p-3 h-100">
-                            <h6 class="text-uppercase text-muted">Bakiye Borçları</h6>
+                            <h6 class="text-uppercase text-muted">Bakiye BorÃ§larÄ±</h6>
                             <p class="fs-4 mb-1"><?= Helpers::sanitize(Helpers::formatCurrency($monthlySummary['balance_debits'])) ?></p>
-                            <small class="text-muted">Son 6 aydaki toplam borçlar</small>
+                            <small class="text-muted">Son 6 aydaki toplam borÃ§lar</small>
                         </div>
                     </div>
                 </div>
@@ -151,17 +151,17 @@ include __DIR__ . '/templates/header.php';
     <div class="col-12 col-xl-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white">
-                <h5 class="mb-0">Aylık Detaylar</h5>
+                <h5 class="mb-0">AylÄ±k Detaylar</h5>
             </div>
             <div class="card-body table-responsive">
                 <table class="table align-middle">
                     <thead>
                         <tr>
                             <th>Ay</th>
-                            <th class="text-end">Sipariş</th>
+                            <th class="text-end">SipariÅŸ</th>
                             <th class="text-end">Gelir</th>
                             <th class="text-end">Kredi</th>
-                            <th class="text-end">Borç</th>
+                            <th class="text-end">BorÃ§</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -190,24 +190,24 @@ include __DIR__ . '/templates/header.php';
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white">
-                <h5 class="mb-0">Hızlı Yönetim</h5>
+                <h5 class="mb-0">HÄ±zlÄ± YÃ¶netim</h5>
             </div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-sm-6 col-xl-3">
-                        <a href="/admin/packages.php" class="btn btn-outline-primary w-100">Paketleri Yönet</a>
+                        <a href="/admin/packages.php" class="btn btn-outline-primary w-100">Paketleri YÃ¶net</a>
                     </div>
                     <div class="col-sm-6 col-xl-3">
-                        <a href="/admin/orders.php" class="btn btn-outline-primary w-100">Paket Siparişleri</a>
+                        <a href="/admin/orders.php" class="btn btn-outline-primary w-100">Paket SipariÅŸleri</a>
                     </div>
                     <div class="col-sm-6 col-xl-3">
-                        <a href="/admin/product-orders.php" class="btn btn-outline-primary w-100">Ürün Siparişleri</a>
+                        <a href="/admin/product-orders.php" class="btn btn-outline-primary w-100">ÃœrÃ¼n SipariÅŸleri</a>
                     </div>
                     <div class="col-sm-6 col-xl-3">
                         <a href="/admin/users.php" class="btn btn-outline-primary w-100">Customers</a>
                     </div>
                     <div class="col-sm-6 col-xl-3">
-                        <a href="/admin/products.php" class="btn btn-outline-primary w-100">Ürünler &amp; Kategoriler</a>
+                        <a href="/admin/products.php" class="btn btn-outline-primary w-100">ÃœrÃ¼nler &amp; Kategoriler</a>
                     </div>
                     <div class="col-sm-6 col-xl-3">
                         <a href="/admin/balances.php" class="btn btn-outline-primary w-100">Bakiyeler</a>

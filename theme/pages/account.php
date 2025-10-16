@@ -12,6 +12,19 @@ $tickets = isset($account['tickets']) ? $account['tickets'] : array();
 $ticketMessages = isset($account['ticketMessages']) ? $account['ticketMessages'] : array();
 $sessions = isset($account['sessions']) ? $account['sessions'] : array();
 $balanceTotal = isset($account['balance']) ? (float)$account['balance'] : 0.0;
+$apiData = isset($account['api']) && is_array($account['api']) ? $account['api'] : array();
+$apiBaseUrl = isset($apiData['base_url']) ? (string)$apiData['base_url'] : Helpers::absoluteUrl('/api/v1/');
+if ($apiBaseUrl !== '' && substr($apiBaseUrl, -1) !== '/') {
+    $apiBaseUrl .= '/';
+}
+$apiDocsUrl = isset($apiData['docs_url']) && $apiData['docs_url'] !== '' ? Helpers::absoluteUrl((string)$apiData['docs_url']) : Helpers::absoluteUrl(Helpers::pageUrl('api-dokumantasyon'));
+$apiTokenValue = isset($apiData['token']) ? (string)$apiData['token'] : '';
+$apiHasToken = !empty($apiData['has_token']) || $apiTokenValue !== '';
+$apiLabel = isset($apiData['label']) ? (string)$apiData['label'] : '';
+$apiWebhook = isset($apiData['webhook_url']) ? (string)$apiData['webhook_url'] : '';
+$apiCreatedAt = isset($apiData['created_at']) ? $apiData['created_at'] : null;
+$apiLastUsed = isset($apiData['last_used_at']) ? $apiData['last_used_at'] : null;
+$apiTokenPreview = $apiHasToken ? substr($apiTokenValue, 0, 4) . str_repeat('•', max(0, strlen($apiTokenValue) - 4)) : '';
 
 $renderAlerts = function ($bag) {
     $bag = is_array($bag) ? $bag : array();
@@ -69,6 +82,7 @@ $ticketPriorityLabels = array(
                     'balance' => 'Bakiyem',
                     'support' => 'Destek Taleplerim',
                     'sessions' => 'Son Oturumlar',
+                    'api' => 'API Entegrasyon',
                 );
                 $label = isset($labels[$tabKey]) ? $labels[$tabKey] : ucfirst($tabKey);
             ?>
@@ -90,6 +104,7 @@ $ticketPriorityLabels = array(
             $balanceMessages = isset($tabMessages['balance']) ? $tabMessages['balance'] : array();
             $supportMessages = isset($tabMessages['support']) ? $tabMessages['support'] : array();
             $sessionMessages = isset($tabMessages['sessions']) ? $tabMessages['sessions'] : array();
+            $apiMessages = isset($tabMessages['api']) ? $tabMessages['api'] : array();
         ?>
 
         <section class="account-panel<?= $activeTab === 'profile' ? ' is-active' : '' ?>" data-account-panel="profile" role="tabpanel">
@@ -524,6 +539,100 @@ $ticketPriorityLabels = array(
                     </div>
                 <?php else: ?>
                     <p class="account-empty">Oturum kaydi bulunmuyor.</p>
+                <?php endif; ?>
+            </div>
+        </section>
+
+        <section class="account-panel<?= $activeTab === 'api' ? ' is-active' : '' ?>" data-account-panel="api" role="tabpanel">
+            <?php $renderAlerts($apiMessages); ?>
+            <div class="account-card">
+                <h2>API Entegrasyon</h2>
+                <p class="account-card__hint">Mağazanızı REST API ile bağlayarak stok ve siparişlerinizi otomatik olarak senkronize edin.</p>
+
+                <div class="account-api">
+                    <div class="account-api__row">
+                        <span class="account-api__label">Temel URL</span>
+                        <div class="account-api__value">
+                            <input type="text" id="account-api-base" value="<?= htmlspecialchars($apiBaseUrl, ENT_QUOTES, 'UTF-8') ?>" readonly>
+                            <button type="button" class="btn btn-outline-secondary btn-sm account-api__copy" data-copy-target="#account-api-base" data-copy-success="Kopyalandı!">Kopyala</button>
+                        </div>
+                    </div>
+                    <div class="account-api__row">
+                        <span class="account-api__label">Dokümantasyon</span>
+                        <div class="account-api__value">
+                            <a class="account-api__link" href="<?= htmlspecialchars($apiDocsUrl, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">API dokümantasyonunu görüntüle</a>
+                        </div>
+                    </div>
+                    <?php if ($apiHasToken): ?>
+                        <div class="account-api__row account-api__row--token">
+                            <span class="account-api__label">API Anahtarı</span>
+                            <div class="account-api__value">
+                                <input type="text" id="account-api-token" value="<?= htmlspecialchars($apiTokenValue, ENT_QUOTES, 'UTF-8') ?>" readonly>
+                                <button type="button" class="btn btn-outline-secondary btn-sm account-api__copy" data-copy-target="#account-api-token" data-copy-success="Kopyalandı!">Kopyala</button>
+                            </div>
+                        </div>
+                        <div class="account-api__meta">
+                            <?php if ($apiCreatedAt): ?>
+                                <span>Oluşturma: <?= htmlspecialchars(date('d.m.Y H:i', strtotime($apiCreatedAt)), ENT_QUOTES, 'UTF-8') ?></span>
+                            <?php endif; ?>
+                            <?php if ($apiLastUsed): ?>
+                                <span>Son kullanım: <?= htmlspecialchars(date('d.m.Y H:i', strtotime($apiLastUsed)), ENT_QUOTES, 'UTF-8') ?></span>
+                            <?php else: ?>
+                                <span>Son kullanım: Henüz kullanılmadı</span>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <?php if (!$apiHasToken): ?>
+                    <form method="post" class="account-form account-api__form">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="action" value="generate_api_token">
+                        <input type="hidden" name="tab" value="api">
+                        <div class="account-form__grid account-form__grid--single">
+                            <label>
+                                <span>Entegrasyon Etiketi (Opsiyonel)</span>
+                                <input type="text" name="label" placeholder="WooCommerce Entegrasyonu">
+                            </label>
+                        </div>
+                        <div class="account-form__actions">
+                            <button type="submit" class="btn btn-primary">API Anahtarı Oluştur</button>
+                        </div>
+                    </form>
+                <?php else: ?>
+                    <form method="post" class="account-form account-api__form account-api__form--settings">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="action" value="save_api_settings">
+                        <input type="hidden" name="tab" value="api">
+                        <div class="account-form__grid account-form__grid--single">
+                            <label>
+                                <span>API Etiketi</span>
+                                <input type="text" name="label" value="<?= htmlspecialchars($apiLabel, ENT_QUOTES, 'UTF-8') ?>" placeholder="WooCommerce Entegrasyonu">
+                            </label>
+                            <label>
+                                <span>Webhook URL (Opsiyonel)</span>
+                                <input type="url" name="webhook_url" value="<?= htmlspecialchars($apiWebhook, ENT_QUOTES, 'UTF-8') ?>" placeholder="https://magazaniz.com/api/webhook">
+                            </label>
+                        </div>
+                        <div class="account-form__actions">
+                            <button type="submit" class="btn btn-primary">Ayarları Kaydet</button>
+                        </div>
+                    </form>
+
+                    <form method="post" class="account-form account-api__form account-api__form--regenerate" onsubmit="return confirm('Mevcut API anahtarınız geçersiz hale gelecek. Devam etmek istiyor musunuz?');">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                        <input type="hidden" name="action" value="regenerate_api_token">
+                        <input type="hidden" name="tab" value="api">
+                        <div class="account-form__grid account-form__grid--single">
+                            <label>
+                                <span>Yeni Etiket (Opsiyonel)</span>
+                                <input type="text" name="label" placeholder="Yeni entegrasyon etiketi">
+                            </label>
+                        </div>
+                        <div class="account-form__actions">
+                            <button type="submit" class="btn btn-outline-danger">API Anahtarını Yenile</button>
+                        </div>
+                    </form>
                 <?php endif; ?>
             </div>
         </section>

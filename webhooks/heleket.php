@@ -153,13 +153,13 @@ if (strpos($orderReference, 'BAL-') === 0) {
         exit;
     }
 
-    $message = "Bakiye yükleme talebiniz başarıyla tamamlandı.\nTutar: " . Helpers::formatCurrency((float)$request['amount'], 'USD');
+    $message = "Bakiye yükleme talebiniz başarıyla tamamlandı.\nTutar: " . Helpers::formatCurrency((float)$request['amount'], 'TRY');
     Mailer::send($request['email'], 'Bakiye Yükleme Onayı', $message);
 
     Telegram::notify(sprintf(
         "Heleket üzerinden yeni bakiye yüklemesi tamamlandı!\nCustomer: %s\nTutar: %s",
         $request['name'],
-        Helpers::formatCurrency((float)$request['amount'], 'USD')
+        Helpers::formatCurrency((float)$request['amount'], 'TRY')
     ));
 
     echo json_encode(['status' => 'ok']);

@@ -66,6 +66,37 @@ CREATE TABLE IF NOT EXISTS categories (
     FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS menus (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    location VARCHAR(60) NOT NULL UNIQUE,
+    title VARCHAR(150) NOT NULL,
+    description TEXT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS menu_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    menu_id INT NOT NULL,
+    parent_id INT NULL,
+    type VARCHAR(30) NOT NULL DEFAULT 'custom',
+    reference_key VARCHAR(191) DEFAULT NULL,
+    title VARCHAR(191) NOT NULL,
+    url VARCHAR(255) DEFAULT NULL,
+    target VARCHAR(20) NOT NULL DEFAULT '_self',
+    position INT NOT NULL DEFAULT 0,
+    is_visible TINYINT(1) NOT NULL DEFAULT 1,
+    settings LONGTEXT DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_menu (menu_id),
+    INDEX idx_parent (parent_id),
+    INDEX idx_type (type),
+    INDEX idx_reference (reference_key),
+    CONSTRAINT fk_menu_items_menu FOREIGN KEY (menu_id) REFERENCES menus(id) ON DELETE CASCADE,
+    CONSTRAINT fk_menu_items_parent FOREIGN KEY (parent_id) REFERENCES menu_items(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS pages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     slug VARCHAR(150) NOT NULL UNIQUE,
@@ -78,6 +109,24 @@ CREATE TABLE IF NOT EXISTS pages (
     published_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS blog_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    excerpt TEXT NULL,
+    content LONGTEXT NOT NULL,
+    author_name VARCHAR(150) NULL,
+    featured_image VARCHAR(255) NULL,
+    seo_title VARCHAR(255) NULL,
+    seo_description VARCHAR(255) NULL,
+    seo_keywords TEXT NULL,
+    is_published TINYINT(1) NOT NULL DEFAULT 0,
+    published_at DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_blog_posts_published (is_published, published_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS products (
@@ -115,6 +164,41 @@ CREATE TABLE IF NOT EXISTS product_orders (
     FOREIGN KEY (product_id) REFERENCES products(id),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (api_token_id) REFERENCES api_tokens(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS coupons (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT NULL,
+    discount_type ENUM('fixed','percent') NOT NULL DEFAULT 'fixed',
+    discount_value DECIMAL(12,2) NOT NULL DEFAULT 0,
+    currency CHAR(3) NOT NULL DEFAULT 'TRY',
+    min_order_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+    max_uses INT NULL,
+    usage_per_user INT NULL,
+    starts_at DATETIME NULL,
+    expires_at DATETIME NULL,
+    status ENUM('active','inactive') NOT NULL DEFAULT 'active',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_coupons_status (status),
+    INDEX idx_coupons_schedule (starts_at, expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS coupon_usages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    coupon_id INT NOT NULL,
+    user_id INT NOT NULL,
+    order_reference VARCHAR(150) NOT NULL,
+    order_id INT NULL,
+    discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+    currency CHAR(3) NOT NULL DEFAULT 'TRY',
+    used_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (order_id) REFERENCES product_orders(id) ON DELETE SET NULL,
+    INDEX idx_coupon_usages_coupon (coupon_id),
+    INDEX idx_coupon_usages_coupon_user (coupon_id, user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS support_tickets (

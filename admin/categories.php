@@ -394,14 +394,20 @@ include __DIR__ . '/templates/header.php';
                             <?php foreach ($flattenedCategories as $category): ?>
                                 <?php $count = isset($productCountMap[$category['id']]) ? $productCountMap[$category['id']] : 0; ?>
                                 <?php $map = isset($categoryMap[$category['id']]) ? $categoryMap[$category['id']] : array(); ?>
+                                <?php $iconValue = isset($category['icon']) ? trim((string)$category['icon']) : ''; ?>
+                                <?php $iconifyName = $iconValue !== '' && strpos($iconValue, 'iconify:') === 0 ? substr($iconValue, 8) : ''; ?>
                                 <tr>
                                     <td style="padding-left: <?= 12 + ($category['depth'] * 18) ?>px;">
                                         <div class="d-flex align-items-center gap-2">
                                             <?php if (!empty($category['image'])): ?>
                                                 <img src="<?= Helpers::sanitize($category['image']) ?>" alt="" width="28" height="28" class="rounded-circle border">
-                                            <?php elseif (!empty($category['icon'])): ?>
+                                            <?php elseif ($iconValue !== ''): ?>
                                                 <span class="badge bg-light text-dark px-2 py-1">
-                                                    <i class="<?= Helpers::sanitize($category['icon']) ?>"></i>
+                                                    <?php if ($iconifyName !== ''): ?>
+                                                        <span class="iconify" data-icon="<?= Helpers::sanitize($iconifyName) ?>" aria-hidden="true"></span>
+                                                    <?php else: ?>
+                                                        <i class="<?= Helpers::sanitize($iconValue) ?>" aria-hidden="true"></i>
+                                                    <?php endif; ?>
                                                 </span>
                                             <?php else: ?>
                                                 <span class="badge bg-secondary-subtle text-secondary-emphasis px-2 py-1">

@@ -11,6 +11,8 @@ $notifyErrors = isset($notification['errors']) && is_array($notification['errors
 $notifySuccess = isset($notification['success']) ? $notification['success'] : '';
 $bankAccounts = isset($context['bankAccounts']) && is_array($context['bankAccounts']) ? $context['bankAccounts'] : array();
 $remainingBalance = isset($context['remaining_balance']) ? (float)$context['remaining_balance'] : null;
+$couponCode = isset($context['coupon_code']) ? (string)$context['coupon_code'] : '';
+$couponDiscountFormatted = isset($context['coupon_discount_formatted']) ? (string)$context['coupon_discount_formatted'] : '';
 
 $methodLabels = array(
     'card' => 'Kredi / Banka Karti',
@@ -40,6 +42,17 @@ $methodLabel = isset($methodLabels[$method]) ? $methodLabels[$method] : 'Odeme';
             <span class="payment-success__summary-label">Siparis Referansi</span>
             <strong><?= $reference !== '' ? htmlspecialchars($reference) : '-' ?></strong>
         </div>
+        <?php if ($couponCode !== ''): ?>
+            <div>
+                <span class="payment-success__summary-label">Kupon</span>
+                <strong>
+                    <?= htmlspecialchars($couponCode) ?>
+                    <?php if ($couponDiscountFormatted !== ''): ?>
+                        <span class="payment-success__coupon-amount">-<?= htmlspecialchars($couponDiscountFormatted) ?></span>
+                    <?php endif; ?>
+                </strong>
+            </div>
+        <?php endif; ?>
         <?php if ($remainingBalance !== null): ?>
             <div>
                 <span class="payment-success__summary-label">Guncel Bakiyeniz</span>

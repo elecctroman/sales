@@ -5,6 +5,7 @@ use App\AuditLog;
 use App\Cart;
 use App\Database;
 use App\Helpers;
+use App\CouponService;
 
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -49,8 +50,36 @@ if (!$items) {
     return;
 }
 
-$totalValue = isset($totals['subtotal_value']) ? (float)$totals['subtotal_value'] : 0.0;
+$userId = (int)$_SESSION['user']['id'];
 $currency = isset($totals['currency']) ? (string)$totals['currency'] : Helpers::activeCurrency();
+
+try {
+    $couponEvaluation = CouponService::recalculate($items, $totals, $userId, true);
+} catch (\RuntimeException $couponProblem) {
+    http_response_code(422);
+    echo json_encode(array(
+        'success' => false,
+        'error' => $couponProblem->getMessage(),
+    ));
+    return;
+} catch (\Throwable $couponError) {
+    http_response_code(500);
+    echo json_encode(array(
+        'success' => false,
+        'error' => 'Kupon doğrulaması tamamlanamadı.',
+    ));
+    return;
+}
+
+$totals = $couponEvaluation['totals'];
+$currency = isset($totals['currency']) ? (string)$totals['currency'] : $currency;
+$totalValue = isset($totals['grand_total_value'])
+    ? (float)$totals['grand_total_value']
+    : (isset($totals['subtotal_value']) ? (float)$totals['subtotal_value'] : 0.0);
+$discountValue = isset($totals['discount_value']) ? (float)$totals['discount_value'] : 0.0;
+$appliedCoupon = isset($couponEvaluation['coupon']) ? $couponEvaluation['coupon'] : null;
+$lineTotals = isset($couponEvaluation['line_totals']) && is_array($couponEvaluation['line_totals']) ? $couponEvaluation['line_totals'] : array();
+$lineDiscounts = isset($couponEvaluation['line_discounts']) && is_array($couponEvaluation['line_discounts']) ? $couponEvaluation['line_discounts'] : array();
 
 $paymentMethod = isset($_POST['payment_method']) ? strtolower(trim((string)$_POST['payment_method'])) : 'card';
 $paymentOption = isset($_POST['payment_option']) ? strtolower(trim((string)$_POST['payment_option'])) : '';
@@ -69,7 +98,6 @@ $customerDetails = array(
     'phone' => isset($_POST['phone']) ? trim((string)$_POST['phone']) : '',
 );
 
-$userId = (int)$_SESSION['user']['id'];
 $pdo = Database::connection();
 
 $orderReference = strtoupper(bin2hex(random_bytes(4)));
@@ -84,6 +112,15 @@ try {
         'customer' => $customerDetails,
         'reference' => $orderReference,
     );
+
+    if ($appliedCoupon) {
+        $metadataTemplate['coupon'] = array(
+            'code' => $appliedCoupon['code'],
+            'discount' => $discountValue,
+            'label' => isset($appliedCoupon['label']) ? $appliedCoupon['label'] : null,
+            'type' => isset($appliedCoupon['discount_type']) ? $appliedCoupon['discount_type'] : null,
+        );
+    }
 
     $orderInsert = $pdo->prepare('INSERT INTO product_orders (product_id, user_id, api_token_id, quantity, note, price, status, source, external_reference, external_metadata, created_at) VALUES (:product_id, :user_id, :api_token_id, :quantity, :note, :price, :status, :source, :external_reference, :external_metadata, NOW())');
 
@@ -107,19 +144,31 @@ try {
             return;
         }
 
-        foreach ($items as $item) {
+        foreach ($items as $index => $item) {
             $productId = isset($item['id']) ? (int)$item['id'] : 0;
             if ($productId <= 0) {
                 continue;
             }
 
             $quantity = isset($item['quantity']) ? (int)$item['quantity'] : 1;
-            $lineTotal = isset($item['line_total_value']) ? (float)$item['line_total_value'] : 0.0;
+            $originalLineTotal = isset($item['line_total_value']) ? (float)$item['line_total_value'] : 0.0;
+            $lineTotal = isset($lineTotals[$index]) ? (float)$lineTotals[$index] : $originalLineTotal;
+            $itemDiscount = isset($lineDiscounts[$index]) ? (float)$lineDiscounts[$index] : max(0.0, $originalLineTotal - $lineTotal);
 
             $itemMetadata = $metadataTemplate;
+            if ($appliedCoupon) {
+                $itemMetadata['coupon'] = array(
+                    'code' => $appliedCoupon['code'],
+                    'discount' => $itemDiscount,
+                    'type' => isset($appliedCoupon['discount_type']) ? $appliedCoupon['discount_type'] : null,
+                    'label' => isset($appliedCoupon['label']) ? $appliedCoupon['label'] : null,
+                );
+            }
             $itemMetadata['line'] = array(
                 'quantity' => $quantity,
                 'unit_price' => isset($item['price_value']) ? (float)$item['price_value'] : 0.0,
+                'subtotal' => $originalLineTotal,
+                'discount' => $itemDiscount,
                 'total' => $lineTotal,
             );
 
@@ -137,6 +186,11 @@ try {
             ));
 
             $orderIds[] = (int)$pdo->lastInsertId();
+        }
+
+        if ($appliedCoupon) {
+            $firstOrderId = $orderIds ? $orderIds[0] : null;
+            CouponService::recordUsage($pdo, $appliedCoupon, $userId, $firstOrderId, $orderReference, $discountValue, $currency);
         }
 
         $pdo->prepare('UPDATE users SET balance = balance - :amount WHERE id = :id')->execute(array(
@@ -160,28 +214,51 @@ try {
 
         AuditLog::record($userId, 'orders.checkout.balance', 'product_order', $orderIds ? $orderIds[0] : null, 'Sepet bakiyeyle odendi (' . $orderReference . ')');
 
+        $redirect = '/payment-success.php?method=balance&orders=' . implode(',', $orderIds)
+            . '&reference=' . urlencode($orderReference)
+            . '&balance=' . urlencode(number_format($remainingBalance, 2, '.', ''));
+
+        if ($appliedCoupon) {
+            $redirect .= '&coupon=' . urlencode($appliedCoupon['code']);
+            if ($discountValue > 0) {
+                $redirect .= '&discount=' . urlencode(number_format($discountValue, 2, '.', ''));
+            }
+        }
+
         echo json_encode(array(
             'success' => true,
-            'redirect' => '/payment-success.php?method=balance&orders=' . implode(',', $orderIds) . '&reference=' . urlencode($orderReference) . '&balance=' . urlencode(number_format($remainingBalance, 2, '.', '')),
+            'redirect' => $redirect,
             'remaining_balance' => $remainingBalance,
         ));
         return;
     }
 
     $status = 'pending';
-    foreach ($items as $item) {
+    foreach ($items as $index => $item) {
         $productId = isset($item['id']) ? (int)$item['id'] : 0;
         if ($productId <= 0) {
             continue;
         }
 
         $quantity = isset($item['quantity']) ? (int)$item['quantity'] : 1;
-        $lineTotal = isset($item['line_total_value']) ? (float)$item['line_total_value'] : 0.0;
+        $originalLineTotal = isset($item['line_total_value']) ? (float)$item['line_total_value'] : 0.0;
+        $lineTotal = isset($lineTotals[$index]) ? (float)$lineTotals[$index] : $originalLineTotal;
+        $itemDiscount = isset($lineDiscounts[$index]) ? (float)$lineDiscounts[$index] : max(0.0, $originalLineTotal - $lineTotal);
 
         $itemMetadata = $metadataTemplate;
+        if ($appliedCoupon) {
+            $itemMetadata['coupon'] = array(
+                'code' => $appliedCoupon['code'],
+                'discount' => $itemDiscount,
+                'type' => isset($appliedCoupon['discount_type']) ? $appliedCoupon['discount_type'] : null,
+                'label' => isset($appliedCoupon['label']) ? $appliedCoupon['label'] : null,
+            );
+        }
         $itemMetadata['line'] = array(
             'quantity' => $quantity,
             'unit_price' => isset($item['price_value']) ? (float)$item['price_value'] : 0.0,
+            'subtotal' => $originalLineTotal,
+            'discount' => $itemDiscount,
             'total' => $lineTotal,
         );
 
@@ -201,15 +278,31 @@ try {
         $orderIds[] = (int)$pdo->lastInsertId();
     }
 
+    if ($appliedCoupon) {
+        $firstOrderId = $orderIds ? $orderIds[0] : null;
+        CouponService::recordUsage($pdo, $appliedCoupon, $userId, $firstOrderId, $orderReference, $discountValue, $currency);
+    }
+
     $pdo->commit();
 
     Cart::clear();
 
     AuditLog::record($userId, 'orders.checkout.' . $paymentMethod, 'product_order', $orderIds ? $orderIds[0] : null, 'Sepet odeme yontemi: ' . $paymentMethod . ' (' . $orderReference . ')');
 
+    $redirect = '/payment-success.php?method=' . urlencode($paymentMethod)
+        . '&orders=' . implode(',', $orderIds)
+        . '&reference=' . urlencode($orderReference);
+
+    if ($appliedCoupon) {
+        $redirect .= '&coupon=' . urlencode($appliedCoupon['code']);
+        if ($discountValue > 0) {
+            $redirect .= '&discount=' . urlencode(number_format($discountValue, 2, '.', ''));
+        }
+    }
+
     echo json_encode(array(
         'success' => true,
-        'redirect' => '/payment-success.php?method=' . urlencode($paymentMethod) . '&orders=' . implode(',', $orderIds) . '&reference=' . urlencode($orderReference),
+        'redirect' => $redirect,
     ));
 } catch (\Throwable $exception) {
     if ($pdo->inTransaction()) {
